@@ -46,7 +46,7 @@ const About = () => (
       <div className="container mx-auto max-w-3xl text-center">
         <h2 className="font-serif text-3xl font-bold">Our Story</h2>
         <p className="mt-6 leading-relaxed text-muted-foreground">
-          Founded in 2020 by a team of technologists and humanitarian workers, CharityApp started as a weekend project during a hackathon. The founders saw firsthand how difficult it was for small charities to reach potential donors, and how donors struggled to find trustworthy organizations. What began as a simple directory grew into a comprehensive platform that has now facilitated over $2.5 million in donations to 150+ charities across 35 countries. Our team is driven by the belief that technology should serve humanity's highest aspirations.
+          Founded in 2020 by a team of technologists and humanitarian workers, CharityApp started as a weekend project during a hackathon. The founders saw firsthand how difficult it was for small charities to reach potential donors, and how donors struggled to find trustworthy organisations. What began as a simple directory grew into a comprehensive platform that has now facilitated over £2.5 million in donations to 150+ charities across 35 countries. Our team is driven by the belief that technology should serve humanity's highest aspirations.
         </p>
       </div>
     </section>
