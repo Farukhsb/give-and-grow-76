@@ -75,8 +75,8 @@ const CharityDetail = () => {
                 <h3 className="font-serif text-xl font-bold">Donate to {charity.name}</h3>
                 <div className="mt-4">
                   <div className="flex justify-between text-sm">
-                    <span className="font-semibold text-primary">${charity.raised.toLocaleString()}</span>
-                    <span className="text-muted-foreground">of ${charity.goal.toLocaleString()}</span>
+                    <span className="font-semibold text-primary">£{charity.raised.toLocaleString()}</span>
+                    <span className="text-muted-foreground">of £{charity.goal.toLocaleString()}</span>
                   </div>
                   <div className="mt-2 h-3 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
@@ -85,7 +85,7 @@ const CharityDetail = () => {
                 </div>
                 <div className="mt-6 grid grid-cols-4 gap-2">
                   {[10, 25, 50, 100].map((amount) => (
-                    <Button key={amount} variant="outline" size="sm">${amount}</Button>
+                    <Button key={amount} variant="outline" size="sm">£{amount}</Button>
                   ))}
                 </div>
                 <Button className="mt-4 w-full gap-2" size="lg">

@@ -29,7 +29,7 @@ const About = () => (
         <div>
           <h2 className="font-serif text-3xl font-bold">Our Mission</h2>
           <p className="mt-4 leading-relaxed text-muted-foreground">
-            CharityApp was born from a simple idea: connecting people who want to help with those who need it most. We bridge the gap between generous donors and verified charitable organizations, ensuring every dollar creates maximum impact. Our platform provides complete transparency, so donors always know exactly where their contributions go and the difference they make.
+            CharityApp was born from a simple idea: connecting people who want to help with those who need it most. We bridge the gap between generous donors and verified charitable organizations, ensuring every pound creates maximum impact. Our platform provides complete transparency, so donors always know exactly where their contributions go and the difference they make.
           </p>
         </div>
         <div>
@@ -46,7 +46,7 @@ const About = () => (
       <div className="container mx-auto max-w-3xl text-center">
         <h2 className="font-serif text-3xl font-bold">Our Story</h2>
         <p className="mt-6 leading-relaxed text-muted-foreground">
-          Founded in 2020 by a team of technologists and humanitarian workers, CharityApp started as a weekend project during a hackathon. The founders saw firsthand how difficult it was for small charities to reach potential donors, and how donors struggled to find trustworthy organizations. What began as a simple directory grew into a comprehensive platform that has now facilitated over $2.5 million in donations to 150+ charities across 35 countries. Our team is driven by the belief that technology should serve humanity's highest aspirations.
+          Founded in 2020 by a team of technologists and humanitarian workers, CharityApp started as a weekend project during a hackathon. The founders saw firsthand how difficult it was for small charities to reach potential donors, and how donors struggled to find trustworthy organisations. What began as a simple directory grew into a comprehensive platform that has now facilitated over £2.5 million in donations to 150+ charities across 35 countries. Our team is driven by the belief that technology should serve humanity's highest aspirations.
         </p>
       </div>
     </section>
@@ -59,7 +59,7 @@ const About = () => (
           {[
             { icon: <Shield className="h-8 w-8 text-primary" />, title: "Verified Charities", desc: "Every charity undergoes rigorous verification before joining our platform." },
             { icon: <Eye className="h-8 w-8 text-primary" />, title: "Full Transparency", desc: "Track your donation from the moment you give to the moment it creates impact." },
-            { icon: <Award className="h-8 w-8 text-secondary" />, title: "95% to Cause", desc: "95 cents of every dollar goes directly to the charity you choose." },
+            { icon: <Award className="h-8 w-8 text-secondary" />, title: "95% to Cause", desc: "95 pence of every pound goes directly to the charity you choose." },
             { icon: <Users className="h-8 w-8 text-secondary" />, title: "45K+ Donors", desc: "Join a thriving community of donors making a difference worldwide." },
           ].map((badge, i) => (
             <Card key={i} className="border-none bg-accent/40 text-center shadow-none">

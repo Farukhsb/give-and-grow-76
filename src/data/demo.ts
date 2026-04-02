@@ -170,9 +170,9 @@ export const teamMembers = [
   },
   {
     name: "Lisa Nakamura",
-    role: "Director of Impact",
+    role: "Data Analyst",
     bio: "Data analyst turned humanitarian, measuring and maximizing the real-world impact of every donation.",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=face",
+    avatar: "/images/team-data-analyst.jpeg",
   },
 ];
 
@@ -204,7 +204,7 @@ export const faqs = [
 ];
 
 export const impactStats = [
-  { label: "Donations Processed", value: 2500000, prefix: "$", suffix: "+" },
+  { label: "Donations Processed", value: 2500000, prefix: "£", suffix: "+" },
   { label: "Charities Supported", value: 150, prefix: "", suffix: "+" },
   { label: "Happy Donors", value: 45000, prefix: "", suffix: "+" },
   { label: "Countries Reached", value: 35, prefix: "", suffix: "" },
