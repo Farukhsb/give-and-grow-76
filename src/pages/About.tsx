@@ -59,7 +59,7 @@ const About = () => (
           {[
             { icon: <Shield className="h-8 w-8 text-primary" />, title: "Verified Charities", desc: "Every charity undergoes rigorous verification before joining our platform." },
             { icon: <Eye className="h-8 w-8 text-primary" />, title: "Full Transparency", desc: "Track your donation from the moment you give to the moment it creates impact." },
-            { icon: <Award className="h-8 w-8 text-secondary" />, title: "95% to Cause", desc: "95 cents of every dollar goes directly to the charity you choose." },
+            { icon: <Award className="h-8 w-8 text-secondary" />, title: "95% to Cause", desc: "95 pence of every pound goes directly to the charity you choose." },
             { icon: <Users className="h-8 w-8 text-secondary" />, title: "45K+ Donors", desc: "Join a thriving community of donors making a difference worldwide." },
           ].map((badge, i) => (
             <Card key={i} className="border-none bg-accent/40 text-center shadow-none">
