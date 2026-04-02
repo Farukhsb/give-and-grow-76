@@ -204,7 +204,7 @@ export const faqs = [
 ];
 
 export const impactStats = [
-  { label: "Donations Processed", value: 2500000, prefix: "$", suffix: "+" },
+  { label: "Donations Processed", value: 2500000, prefix: "£", suffix: "+" },
   { label: "Charities Supported", value: 150, prefix: "", suffix: "+" },
   { label: "Happy Donors", value: 45000, prefix: "", suffix: "+" },
   { label: "Countries Reached", value: 35, prefix: "", suffix: "" },
