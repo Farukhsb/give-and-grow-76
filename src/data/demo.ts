@@ -169,7 +169,7 @@ export const teamMembers = [
     avatar: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=200&h=200&fit=crop&crop=face",
   },
   {
-    name: "Lisa Nakamura",
+    name: "Abdullahi Faruk",
     role: "Data Analyst",
     bio: "Data analyst turned humanitarian, measuring and maximizing the real-world impact of every donation.",
     avatar: "/images/team-data-analyst.jpeg",
