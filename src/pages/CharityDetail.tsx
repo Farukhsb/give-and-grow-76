@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Users, Heart } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,10 +89,40 @@ const CharityDetail = () => {
                     <Button key={amount} variant="outline" size="sm">£{amount}</Button>
                   ))}
                 </div>
+
+                <div className="mt-5">
+                  <p className="text-sm font-medium mb-2">Payment Method</p>
+                  <RadioGroup defaultValue="card" className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "card", label: "💳 Card", desc: "Visa / Mastercard" },
+                      { value: "paypal", label: "🅿️ PayPal", desc: "Pay with PayPal" },
+                      { value: "bank", label: "🏦 Bank", desc: "Bank Transfer" },
+                      { value: "apple", label: "🍎 Apple Pay", desc: "Quick checkout" },
+                    ].map((method) => (
+                      <label
+                        key={method.value}
+                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-input p-2.5 transition-colors hover:bg-accent has-[data-state=checked]:border-primary has-[data-state=checked]:bg-primary/5"
+                      >
+                        <RadioGroupItem value={method.value} className="sr-only" />
+                        <div>
+                          <p className="text-sm font-medium leading-none">{method.label}</p>
+                          <p className="text-[11px] text-muted-foreground">{method.desc}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </div>
+
                 <Button className="mt-4 w-full gap-2" size="lg">
                   <Heart className="h-4 w-4" /> Donate Now
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">Secure payment · Tax deductible · 95% goes to charity</p>
+                <div className="mt-3 flex items-center justify-center gap-3 text-muted-foreground">
+                  <span className="text-xs">💳 Visa</span>
+                  <span className="text-xs">💳 Mastercard</span>
+                  <span className="text-xs">🅿️ PayPal</span>
+                  <span className="text-xs">🍎 Apple Pay</span>
+                </div>
               </CardContent>
             </Card>
           </div>
