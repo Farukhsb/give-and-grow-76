@@ -29,7 +29,7 @@ const About = () => (
         <div>
           <h2 className="font-serif text-3xl font-bold">Our Mission</h2>
           <p className="mt-4 leading-relaxed text-muted-foreground">
-            CharityApp was born from a simple idea: connecting people who want to help with those who need it most. We bridge the gap between generous donors and verified charitable organizations, ensuring every dollar creates maximum impact. Our platform provides complete transparency, so donors always know exactly where their contributions go and the difference they make.
+            CharityApp was born from a simple idea: connecting people who want to help with those who need it most. We bridge the gap between generous donors and verified charitable organizations, ensuring every pound creates maximum impact. Our platform provides complete transparency, so donors always know exactly where their contributions go and the difference they make.
           </p>
         </div>
         <div>
