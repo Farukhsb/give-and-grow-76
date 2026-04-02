@@ -85,7 +85,7 @@ const CharityDetail = () => {
                 </div>
                 <div className="mt-6 grid grid-cols-4 gap-2">
                   {[10, 25, 50, 100].map((amount) => (
-                    <Button key={amount} variant="outline" size="sm">${amount}</Button>
+                    <Button key={amount} variant="outline" size="sm">£{amount}</Button>
                   ))}
                 </div>
                 <Button className="mt-4 w-full gap-2" size="lg">

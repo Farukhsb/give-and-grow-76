@@ -156,8 +156,8 @@ const Index = () => {
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{charity.description}</p>
                     <div className="mt-3">
                       <div className="mb-1 flex justify-between text-xs">
-                        <span className="font-medium">${(charity.raised / 1000).toFixed(0)}K raised</span>
-                        <span className="text-muted-foreground">of ${(charity.goal / 1000).toFixed(0)}K</span>
+                        <span className="font-medium">£{(charity.raised / 1000).toFixed(0)}K raised</span>
+                        <span className="text-muted-foreground">of £{(charity.goal / 1000).toFixed(0)}K</span>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min((charity.raised / charity.goal) * 100, 100)}%` }} />

@@ -76,8 +76,8 @@ const Charities = () => {
                     <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{charity.description}</p>
                     <div className="mt-4">
                       <div className="mb-1 flex justify-between text-sm">
-                        <span className="font-medium">${charity.raised.toLocaleString()}</span>
-                        <span className="text-muted-foreground">of ${charity.goal.toLocaleString()}</span>
+                        <span className="font-medium">£{charity.raised.toLocaleString()}</span>
+                        <span className="text-muted-foreground">of £{charity.goal.toLocaleString()}</span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-muted">
                         <div className="h-full rounded-full bg-primary" style={{ width: `${(charity.raised / charity.goal) * 100}%` }} />
