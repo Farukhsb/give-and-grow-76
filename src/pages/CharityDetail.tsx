@@ -1,15 +1,31 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, MapPin, Users, Heart } from "lucide-react";
+import { ArrowLeft, MapPin, Users, Heart, Loader2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
-import { charities, stories } from "@/data/demo";
+import { stories } from "@/data/demo";
+import { useCharity, addDonation } from "@/hooks/use-charities";
+import { useToast } from "@/hooks/use-toast";
 
 const CharityDetail = () => {
   const { id } = useParams();
-  const charity = charities.find((c) => c.id === id);
+  const { charity, loading } = useCharity(id);
+  const { toast } = useToast();
+  const [selectedAmount, setSelectedAmount] = useState(25);
+  const [donating, setDonating] = useState(false);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!charity) {
     return (
@@ -23,7 +39,26 @@ const CharityDetail = () => {
   }
 
   const relatedStories = stories.filter((s) => s.charityId === charity.id);
-  const progress = (charity.raised / charity.goal) * 100;
+  const progress = charity.goalAmount > 0 ? (charity.amountRaised / charity.goalAmount) * 100 : 0;
+
+  const handleDonate = async () => {
+    setDonating(true);
+    try {
+      await addDonation(charity.id, selectedAmount);
+      toast({
+        title: "Thank you! 🎉",
+        description: `Your £${selectedAmount} donation to ${charity.name} has been recorded.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Donation failed",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDonating(false);
+    }
+  };
 
   return (
     <Layout>
@@ -34,17 +69,23 @@ const CharityDetail = () => {
 
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <div className="overflow-hidden rounded-lg">
-              <img src={charity.image} alt={charity.name} className="aspect-[16/9] w-full object-cover" />
-            </div>
+            {charity.image && (
+              <div className="overflow-hidden rounded-lg">
+                <img src={charity.image} alt={charity.name} className="aspect-[16/9] w-full object-cover" />
+              </div>
+            )}
             <div className="mt-6">
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{charity.category}</Badge>
-                <Badge variant={charity.urgency === "high" ? "destructive" : "outline"} className="capitalize">{charity.urgency} urgency</Badge>
+                {charity.category && <Badge variant="secondary">{charity.category}</Badge>}
+                {charity.urgency && (
+                  <Badge variant={charity.urgency === "high" ? "destructive" : "outline"} className="capitalize">{charity.urgency} urgency</Badge>
+                )}
               </div>
               <h1 className="mt-4 font-serif text-3xl font-bold md:text-4xl">{charity.name}</h1>
-              <p className="mt-1 flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" />{charity.location}</p>
-              <p className="mt-6 leading-relaxed text-muted-foreground">{charity.longDescription}</p>
+              {charity.location && (
+                <p className="mt-1 flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" />{charity.location}</p>
+              )}
+              <p className="mt-6 leading-relaxed text-muted-foreground">{charity.longDescription || charity.description}</p>
             </div>
 
             {relatedStories.length > 0 && (
@@ -76,17 +117,24 @@ const CharityDetail = () => {
                 <h3 className="font-serif text-xl font-bold">Donate to {charity.name}</h3>
                 <div className="mt-4">
                   <div className="flex justify-between text-sm">
-                    <span className="font-semibold text-primary">£{charity.raised.toLocaleString()}</span>
-                    <span className="text-muted-foreground">of £{charity.goal.toLocaleString()}</span>
+                    <span className="font-semibold text-primary">£{charity.amountRaised.toLocaleString()}</span>
+                    <span className="text-muted-foreground">of £{charity.goalAmount.toLocaleString()}</span>
                   </div>
                   <div className="mt-2 h-3 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
                   </div>
                   <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"><Users className="h-3.5 w-3.5" />{charity.donors.toLocaleString()} donors</p>
                 </div>
                 <div className="mt-6 grid grid-cols-4 gap-2">
                   {[10, 25, 50, 100].map((amount) => (
-                    <Button key={amount} variant="outline" size="sm">£{amount}</Button>
+                    <Button
+                      key={amount}
+                      variant={selectedAmount === amount ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedAmount(amount)}
+                    >
+                      £{amount}
+                    </Button>
                   ))}
                 </div>
 
@@ -113,8 +161,9 @@ const CharityDetail = () => {
                   </RadioGroup>
                 </div>
 
-                <Button className="mt-4 w-full gap-2" size="lg">
-                  <Heart className="h-4 w-4" /> Donate Now
+                <Button className="mt-4 w-full gap-2" size="lg" onClick={handleDonate} disabled={donating}>
+                  {donating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className="h-4 w-4" />}
+                  {donating ? "Processing..." : "Donate Now"}
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">Secure payment · Tax deductible · 95% goes to charity</p>
                 <div className="mt-3 flex items-center justify-center gap-3 text-muted-foreground">

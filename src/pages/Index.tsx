@@ -4,7 +4,8 @@ import { Heart, Users, Globe, ArrowRight, Droplets, BookOpen, Utensils, Shield }
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
-import { charities, testimonials, impactStats } from "@/data/demo";
+import { testimonials, impactStats } from "@/data/demo";
+import { useCharities } from "@/hooks/use-charities";
 import { useEffect, useState, useRef } from "react";
 
 const fadeUp = {
@@ -59,6 +60,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 const Index = () => {
+  const { charities, loading } = useCharities();
   const featured = charities.filter((c) => c.featured).slice(0, 4);
 
   return (
@@ -141,32 +143,38 @@ const Index = () => {
             </Button>
           </div>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((charity) => (
-              <Link key={charity.id} to={`/charities/${charity.id}`}>
-                <Card className="group h-full overflow-hidden transition-all hover:shadow-lg">
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img src={charity.image} alt={charity.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                      {categoryIcons[charity.category]}
-                      {charity.category}
+            {loading ? (
+              <p className="col-span-full text-center text-muted-foreground">Loading charities...</p>
+            ) : featured.length === 0 ? (
+              <p className="col-span-full text-center text-muted-foreground">No featured charities yet.</p>
+            ) : (
+              featured.map((charity) => (
+                <Link key={charity.id} to={`/charities/${charity.id}`}>
+                  <Card className="group h-full overflow-hidden transition-all hover:shadow-lg">
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img src={charity.image} alt={charity.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                     </div>
-                    <h3 className="font-serif text-lg font-semibold leading-snug">{charity.name}</h3>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{charity.description}</p>
-                    <div className="mt-3">
-                      <div className="mb-1 flex justify-between text-xs">
-                        <span className="font-medium">£{(charity.raised / 1000).toFixed(0)}K raised</span>
-                        <span className="text-muted-foreground">of £{(charity.goal / 1000).toFixed(0)}K</span>
+                    <CardContent className="p-4">
+                      <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        {categoryIcons[charity.category]}
+                        {charity.category}
                       </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min((charity.raised / charity.goal) * 100, 100)}%` }} />
+                      <h3 className="font-serif text-lg font-semibold leading-snug">{charity.name}</h3>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{charity.description}</p>
+                      <div className="mt-3">
+                        <div className="mb-1 flex justify-between text-xs">
+                          <span className="font-medium">£{(charity.amountRaised / 1000).toFixed(0)}K raised</span>
+                          <span className="text-muted-foreground">of £{(charity.goalAmount / 1000).toFixed(0)}K</span>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min((charity.amountRaised / charity.goalAmount) * 100, 100)}%` }} />
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))
+            )}
           </div>
           <div className="mt-6 text-center md:hidden">
             <Button asChild variant="outline">
