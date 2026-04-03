@@ -60,6 +60,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 const Index = () => {
+  const { charities, loading } = useCharities();
   const featured = charities.filter((c) => c.featured).slice(0, 4);
 
   return (
