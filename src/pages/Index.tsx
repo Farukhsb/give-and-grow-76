@@ -4,7 +4,8 @@ import { Heart, Users, Globe, ArrowRight, Droplets, BookOpen, Utensils, Shield }
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
-import { charities, testimonials, impactStats } from "@/data/demo";
+import { testimonials, impactStats } from "@/data/demo";
+import { useCharities } from "@/hooks/use-charities";
 import { useEffect, useState, useRef } from "react";
 
 const fadeUp = {
