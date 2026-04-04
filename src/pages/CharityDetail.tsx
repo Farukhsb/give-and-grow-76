@@ -8,11 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
 import { stories } from "@/data/demo";
 import { useCharity, addDonation } from "@/hooks/use-charities";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const CharityDetail = () => {
   const { id } = useParams();
   const { charity, loading } = useCharity(id);
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedAmount, setSelectedAmount] = useState(25);
   const [donating, setDonating] = useState(false);
@@ -42,19 +45,29 @@ const CharityDetail = () => {
   const progress = charity.goalAmount > 0 ? (charity.amountRaised / charity.goalAmount) * 100 : 0;
 
   const handleDonate = async () => {
+    if (!user) {
+      toast({ title: "Please sign in", description: "You need to sign in to donate.", variant: "destructive" });
+      return;
+    }
     setDonating(true);
     try {
+      // Update Firestore (real-time counter)
       await addDonation(charity.id, selectedAmount);
+      // Record in Supabase for history/tracking
+      await supabase.from("donations").insert({
+        user_id: user.id,
+        charity_id: charity.id,
+        charity_name: charity.name,
+        amount: selectedAmount,
+        status: "completed",
+        payment_method: "demo",
+      });
       toast({
         title: "Thank you! 🎉",
-        description: `Your £${selectedAmount} donation to ${charity.name} has been recorded.`,
+        description: `Your $${selectedAmount} donation to ${charity.name} has been recorded.`,
       });
-    } catch (err) {
-      toast({
-        title: "Donation failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Donation failed", description: "Something went wrong.", variant: "destructive" });
     } finally {
       setDonating(false);
     }
@@ -117,8 +130,8 @@ const CharityDetail = () => {
                 <h3 className="font-serif text-xl font-bold">Donate to {charity.name}</h3>
                 <div className="mt-4">
                   <div className="flex justify-between text-sm">
-                    <span className="font-semibold text-primary">£{charity.amountRaised.toLocaleString()}</span>
-                    <span className="text-muted-foreground">of £{charity.goalAmount.toLocaleString()}</span>
+                    <span className="font-semibold text-primary">${charity.amountRaised.toLocaleString()}</span>
+                    <span className="text-muted-foreground">of ${charity.goalAmount.toLocaleString()}</span>
                   </div>
                   <div className="mt-2 h-3 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
@@ -127,13 +140,8 @@ const CharityDetail = () => {
                 </div>
                 <div className="mt-6 grid grid-cols-4 gap-2">
                   {[10, 25, 50, 100].map((amount) => (
-                    <Button
-                      key={amount}
-                      variant={selectedAmount === amount ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedAmount(amount)}
-                    >
-                      £{amount}
+                    <Button key={amount} variant={selectedAmount === amount ? "default" : "outline"} size="sm" onClick={() => setSelectedAmount(amount)}>
+                      ${amount}
                     </Button>
                   ))}
                 </div>
@@ -147,10 +155,7 @@ const CharityDetail = () => {
                       { value: "bank", label: "🏦 Bank", desc: "Bank Transfer" },
                       { value: "apple", label: "🍎 Apple Pay", desc: "Quick checkout" },
                     ].map((method) => (
-                      <label
-                        key={method.value}
-                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-input p-2.5 transition-colors hover:bg-accent has-[data-state=checked]:border-primary has-[data-state=checked]:bg-primary/5"
-                      >
+                      <label key={method.value} className="flex cursor-pointer items-center gap-2 rounded-lg border border-input p-2.5 transition-colors hover:bg-accent has-[data-state=checked]:border-primary has-[data-state=checked]:bg-primary/5">
                         <RadioGroupItem value={method.value} className="sr-only" />
                         <div>
                           <p className="text-sm font-medium leading-none">{method.label}</p>
@@ -161,17 +166,17 @@ const CharityDetail = () => {
                   </RadioGroup>
                 </div>
 
+                {!user && (
+                  <p className="mt-3 text-center text-sm text-muted-foreground">
+                    <Link to="/auth" className="text-primary hover:underline">Sign in</Link> to donate and track your contributions.
+                  </p>
+                )}
+
                 <Button className="mt-4 w-full gap-2" size="lg" onClick={handleDonate} disabled={donating}>
                   {donating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className="h-4 w-4" />}
                   {donating ? "Processing..." : "Donate Now"}
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">Secure payment · Tax deductible · 95% goes to charity</p>
-                <div className="mt-3 flex items-center justify-center gap-3 text-muted-foreground">
-                  <span className="text-xs">💳 Visa</span>
-                  <span className="text-xs">💳 Mastercard</span>
-                  <span className="text-xs">🅿️ PayPal</span>
-                  <span className="text-xs">🍎 Apple Pay</span>
-                </div>
               </CardContent>
             </Card>
           </div>

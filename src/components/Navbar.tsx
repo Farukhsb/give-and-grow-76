@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Heart, LogIn, LayoutDashboard } from "lucide-react";
+import { Menu, X, Heart, LogIn, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import NotificationBell from "@/components/NotificationBell";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -15,7 +16,7 @@ const navLinks = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
@@ -38,17 +39,23 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+
+          <NotificationBell />
+
           {user ? (
-            <Button asChild variant="outline" size="sm" className="ml-3">
-              <Link to="/dashboard">
-                <LayoutDashboard className="h-4 w-4 mr-1" /> Dashboard
-              </Link>
-            </Button>
+            <>
+              {profile?.role === "admin" && (
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/admin"><ShieldCheck className="h-4 w-4 mr-1" /> Admin</Link>
+                </Button>
+              )}
+              <Button asChild variant="outline" size="sm" className="ml-1">
+                <Link to="/dashboard"><LayoutDashboard className="h-4 w-4 mr-1" /> Dashboard</Link>
+              </Button>
+            </>
           ) : (
-            <Button asChild variant="outline" size="sm" className="ml-3">
-              <Link to="/auth">
-                <LogIn className="h-4 w-4 mr-1" /> Sign In
-              </Link>
+            <Button asChild variant="outline" size="sm" className="ml-2">
+              <Link to="/auth"><LogIn className="h-4 w-4 mr-1" /> Sign In</Link>
             </Button>
           )}
           <Button asChild size="sm" className="ml-2">
@@ -78,21 +85,14 @@ const Navbar = () => {
             </Link>
           ))}
           {user ? (
-            <Link
-              to="/dashboard"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent"
-            >
-              Dashboard
-            </Link>
+            <>
+              {profile?.role === "admin" && (
+                <Link to="/admin" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Admin Panel</Link>
+              )}
+              <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Dashboard</Link>
+            </>
           ) : (
-            <Link
-              to="/auth"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent"
-            >
-              Sign In
-            </Link>
+            <Link to="/auth" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Sign In</Link>
           )}
           <Button asChild size="sm" className="mt-2 w-full">
             <Link to="/charities" onClick={() => setMobileOpen(false)}>Donate Now</Link>
