@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import Chatbot from "@/components/Chatbot";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Charities from "./pages/Charities";
@@ -16,6 +17,7 @@ import Terms from "./pages/Terms";
 import DonationPolicy from "./pages/DonationPolicy";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,8 +42,10 @@ const App = () => (
             <Route path="/donation-policy" element={<DonationPolicy />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Chatbot />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

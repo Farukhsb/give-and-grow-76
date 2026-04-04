@@ -1,0 +1,14 @@
+{
+  "name": "CharityApp",
+  "short_name": "CharityApp",
+  "description": "Make a difference — donate to verified charities, volunteer, and track your impact.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#3a8f6a",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/placeholder.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "/placeholder.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ]
+}
