@@ -3,7 +3,7 @@ import { Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Heart, Award, Clock, TrendingUp, LogOut, Edit, User,
-  DollarSign, HandHeart, Trophy, ChevronRight
+  DollarSign, HandHeart, Trophy, ChevronRight, Users, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCharities } from "@/hooks/use-charities";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -30,14 +31,25 @@ interface DonationRow {
   created_at: string;
 }
 
+interface VolunteerRow {
+  id: string;
+  charity_name: string;
+  status: string;
+  hours_logged: number;
+  created_at: string;
+}
+
 const Dashboard = () => {
   const { user, profile, loading, signOut, updateProfile } = useAuth();
   const { toast } = useToast();
+  const { charities } = useCharities();
   const [donations, setDonations] = useState<DonationRow[]>([]);
+  const [volunteers, setVolunteers] = useState<VolunteerRow[]>([]);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editBio, setEditBio] = useState("");
   const [totalDonated, setTotalDonated] = useState(0);
+  const [totalHours, setTotalHours] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -50,6 +62,18 @@ const Dashboard = () => {
         if (data) {
           setDonations(data as DonationRow[]);
           setTotalDonated(data.reduce((sum, d) => sum + Number(d.amount), 0));
+        }
+      });
+
+    supabase
+      .from("volunteer_assignments")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) {
+          setVolunteers(data as VolunteerRow[]);
+          setTotalHours(data.reduce((sum, v) => sum + Number(v.hours_logged), 0));
         }
       });
   }, [user]);
@@ -70,17 +94,50 @@ const Dashboard = () => {
     toast({ title: "Profile updated!" });
   };
 
+  const handleVolunteer = async (charity: { id: string; name: string }) => {
+    const existing = volunteers.find(v => v.charity_name === charity.name && v.status === "active");
+    if (existing) {
+      toast({ title: "Already volunteering", description: `You're already assigned to ${charity.name}.` });
+      return;
+    }
+    await supabase.from("volunteer_assignments").insert({
+      user_id: user.id,
+      charity_id: charity.id,
+      charity_name: charity.name,
+      status: "active",
+      hours_logged: 0,
+    });
+    // Refresh
+    const { data } = await supabase.from("volunteer_assignments").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (data) {
+      setVolunteers(data as VolunteerRow[]);
+      setTotalHours(data.reduce((sum, v) => sum + Number(v.hours_logged), 0));
+    }
+    toast({ title: "Volunteering started! 🙌", description: `You've joined ${charity.name}.` });
+  };
+
+  const handleLogHours = async (id: string, currentHours: number) => {
+    const hours = prompt("How many hours did you volunteer?", "1");
+    if (!hours || isNaN(Number(hours))) return;
+    await supabase.from("volunteer_assignments").update({ hours_logged: currentHours + Number(hours) }).eq("id", id);
+    const { data } = await supabase.from("volunteer_assignments").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (data) {
+      setVolunteers(data as VolunteerRow[]);
+      setTotalHours(data.reduce((sum, v) => sum + Number(v.hours_logged), 0));
+    }
+    toast({ title: "Hours logged! ⏰" });
+  };
+
   const statCards = [
     { icon: DollarSign, label: "Total Donated", value: `$${totalDonated.toFixed(2)}`, color: "text-primary" },
     { icon: Heart, label: "Donations Made", value: donations.length.toString(), color: "text-secondary" },
-    { icon: Trophy, label: "Points Earned", value: (profile?.points ?? 0).toString(), color: "text-yellow-500" },
-    { icon: Award, label: "Badges", value: (profile?.badges?.length ?? 0).toString(), color: "text-purple-500" },
+    { icon: Clock, label: "Volunteer Hours", value: totalHours.toString(), color: "text-primary" },
+    { icon: Trophy, label: "Points Earned", value: (profile?.points ?? 0).toString(), color: "text-secondary" },
   ];
 
   return (
     <Layout>
       <div className="container py-8 md:py-12 space-y-8">
-        {/* Header */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-bold text-foreground">
@@ -98,7 +155,6 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-        {/* Edit Profile */}
         {editing && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
             <Card>
@@ -126,7 +182,6 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {statCards.map((stat, i) => (
             <motion.div key={stat.label} initial="hidden" animate="visible" variants={fadeUp} style={{ transitionDelay: `${i * 0.1}s` }}>
@@ -141,18 +196,16 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Tabs */}
         <Tabs defaultValue="donations" className="space-y-4">
           <TabsList>
             <TabsTrigger value="donations">Donation History</TabsTrigger>
+            <TabsTrigger value="volunteering">Volunteering</TabsTrigger>
             <TabsTrigger value="badges">Badges & Achievements</TabsTrigger>
           </TabsList>
 
           <TabsContent value="donations">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Recent Donations</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-lg">Recent Donations</CardTitle></CardHeader>
               <CardContent>
                 {donations.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
@@ -168,15 +221,11 @@ const Dashboard = () => {
                       <div key={d.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div>
                           <p className="font-medium">{d.charity_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(d.created_at).toLocaleDateString()}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-primary">${Number(d.amount).toFixed(2)}</p>
-                          <Badge variant={d.status === "completed" ? "default" : "secondary"}>
-                            {d.status}
-                          </Badge>
+                          <Badge variant={d.status === "completed" ? "default" : "secondary"}>{d.status}</Badge>
                         </div>
                       </div>
                     ))}
@@ -186,11 +235,65 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="badges">
+          <TabsContent value="volunteering">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Your Achievements</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Volunteer Assignments</CardTitle>
+                </div>
               </CardHeader>
+              <CardContent>
+                {volunteers.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No volunteer assignments yet.</p>
+                    <p className="text-sm mt-2">Sign up for a charity below:</p>
+                    <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                      {charities.slice(0, 4).map(c => (
+                        <Button key={c.id} variant="outline" size="sm" onClick={() => handleVolunteer(c)}>
+                          <Plus className="h-3 w-3 mr-1" /> {c.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {volunteers.map((v) => (
+                      <div key={v.id} className="flex items-center justify-between rounded-lg border p-4">
+                        <div>
+                          <p className="font-medium">{v.charity_name}</p>
+                          <p className="text-sm text-muted-foreground">Since {new Date(v.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="font-bold text-primary">{Number(v.hours_logged)}h</p>
+                            <Badge variant={v.status === "active" ? "default" : "secondary"}>{v.status}</Badge>
+                          </div>
+                          <Button size="sm" variant="outline" onClick={() => handleLogHours(v.id, Number(v.hours_logged))}>
+                            <Clock className="h-3 w-3 mr-1" /> Log Hours
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="pt-4 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Join more charities:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {charities.slice(0, 4).map(c => (
+                          <Button key={c.id} variant="ghost" size="sm" onClick={() => handleVolunteer(c)}>
+                            <Plus className="h-3 w-3 mr-1" /> {c.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="badges">
+            <Card>
+              <CardHeader><CardTitle className="text-lg">Your Achievements</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
@@ -199,9 +302,9 @@ const Dashboard = () => {
                     { name: "Super Donor", icon: "🌟", unlocked: totalDonated >= 500 },
                     { name: "Champion", icon: "🏆", unlocked: totalDonated >= 1000 },
                     { name: "5 Donations", icon: "🔥", unlocked: donations.length >= 5 },
-                    { name: "10 Donations", icon: "⭐", unlocked: donations.length >= 10 },
+                    { name: "Volunteer", icon: "🤝", unlocked: volunteers.length > 0 },
+                    { name: "10 Hours", icon: "⏰", unlocked: totalHours >= 10 },
                     { name: "Early Adopter", icon: "🚀", unlocked: true },
-                    { name: "Community Hero", icon: "🦸", unlocked: false },
                   ].map((badge) => (
                     <div
                       key={badge.name}
@@ -211,9 +314,7 @@ const Dashboard = () => {
                     >
                       <span className="text-3xl">{badge.icon}</span>
                       <p className="mt-2 text-sm font-medium">{badge.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {badge.unlocked ? "Unlocked!" : "Locked"}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{badge.unlocked ? "Unlocked!" : "Locked"}</p>
                     </div>
                   ))}
                 </div>

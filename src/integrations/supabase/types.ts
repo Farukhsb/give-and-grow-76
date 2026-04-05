@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          content: string
+          created_at: string
+          email: string | null
+          id: string
+          rating: number
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          rating?: number
+          title: string
+          type?: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          rating?: number
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
