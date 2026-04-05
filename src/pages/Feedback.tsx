@@ -27,7 +27,7 @@ const Feedback = () => {
 
     setSubmitting(true);
     try {
-      await supabase.from("feedback").insert({
+      await (supabase.from("feedback" as any) as any).insert({
         user_id: user?.id || null,
         type,
         title: title.trim(),
