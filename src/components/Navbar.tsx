@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Heart, LogIn, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { Menu, X, Heart, LogIn, LayoutDashboard, ShieldCheck, Trophy, Link2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import NotificationBell from "@/components/NotificationBell";
@@ -10,6 +10,8 @@ const navLinks = [
   { to: "/about", label: "About" },
   { to: "/charities", label: "Charities" },
   { to: "/stories", label: "Stories" },
+  { to: "/leaderboard", label: "Leaderboard" },
+  { to: "/blockchain", label: "Transparency" },
   { to: "/contact", label: "Contact" },
 ];
 
@@ -27,7 +29,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop */}
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.to}
@@ -49,6 +51,9 @@ const Navbar = () => {
                   <Link to="/admin"><ShieldCheck className="h-4 w-4 mr-1" /> Admin</Link>
                 </Button>
               )}
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/feedback"><MessageSquare className="h-4 w-4 mr-1" /> Feedback</Link>
+              </Button>
               <Button asChild variant="outline" size="sm" className="ml-1">
                 <Link to="/dashboard"><LayoutDashboard className="h-4 w-4 mr-1" /> Dashboard</Link>
               </Button>
@@ -64,14 +69,14 @@ const Navbar = () => {
         </div>
 
         {/* Mobile toggle */}
-        <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t bg-background px-4 pb-4 md:hidden">
+        <div className="border-t bg-background px-4 pb-4 lg:hidden">
           {navLinks.map((link) => (
             <Link
               key={link.to}
@@ -89,6 +94,7 @@ const Navbar = () => {
               {profile?.role === "admin" && (
                 <Link to="/admin" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Admin Panel</Link>
               )}
+              <Link to="/feedback" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Feedback</Link>
               <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Dashboard</Link>
             </>
           ) : (
