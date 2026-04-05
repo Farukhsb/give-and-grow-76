@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   BarChart3, Users, DollarSign, TrendingUp, Activity, ArrowUpRight,
-  Heart, Globe, Shield
+  Heart, Globe, Shield, MessageSquare, Clock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,22 +34,52 @@ interface DonationRow {
   user_id: string | null;
 }
 
+interface FeedbackRow {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  rating: number;
+  email: string | null;
+  created_at: string;
+}
+
+interface VolunteerRow {
+  id: string;
+  charity_name: string;
+  hours_logged: number;
+  status: string;
+  user_id: string;
+}
+
 const AdminDashboard = () => {
   const { user, profile, loading } = useAuth();
   const [donations, setDonations] = useState<DonationRow[]>([]);
   const [profileCount, setProfileCount] = useState(0);
+  const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
+  const [volunteers, setVolunteers] = useState<VolunteerRow[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     if (!user || profile?.role !== "admin") return;
 
     const fetchData = async () => {
-      const [donRes, profRes] = await Promise.all([
+      const [donRes, profRes, volRes] = await Promise.all([
         supabase.from("donations").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("id", { count: "exact" }),
+        supabase.from("volunteer_assignments").select("*"),
       ]);
       setDonations((donRes.data as DonationRow[]) || []);
       setProfileCount(profRes.count || 0);
+      setVolunteers((volRes.data as VolunteerRow[]) || []);
+
+      // Fetch feedback
+      const { data: fbData } = await (supabase.from("feedback" as any) as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setFeedback((fbData as FeedbackRow[]) || []);
+
       setLoadingData(false);
     };
     fetchData();
@@ -61,8 +91,8 @@ const AdminDashboard = () => {
 
   const totalRevenue = donations.reduce((s, d) => s + Number(d.amount), 0);
   const completedDonations = donations.filter((d) => d.status === "completed").length;
+  const totalVolunteerHours = volunteers.reduce((s, v) => s + Number(v.hours_logged), 0);
 
-  // Monthly data
   const monthlyData = donations.reduce((acc, d) => {
     const month = new Date(d.created_at).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
     const existing = acc.find((a) => a.month === month);
@@ -71,7 +101,6 @@ const AdminDashboard = () => {
     return acc;
   }, [] as { month: string; amount: number; count: number }[]);
 
-  // By charity
   const byCharity = donations.reduce((acc, d) => {
     const existing = acc.find((a) => a.name === d.charity_name);
     if (existing) existing.value += Number(d.amount);
@@ -83,7 +112,7 @@ const AdminDashboard = () => {
     { label: "Total Revenue", value: `$${totalRevenue.toFixed(0)}`, icon: DollarSign, change: "+12%" },
     { label: "Total Donations", value: completedDonations.toString(), icon: Heart, change: "+8%" },
     { label: "Active Users", value: profileCount.toString(), icon: Users, change: "+15%" },
-    { label: "Avg Donation", value: completedDonations ? `$${(totalRevenue / completedDonations).toFixed(0)}` : "$0", icon: TrendingUp, change: "+5%" },
+    { label: "Volunteer Hours", value: totalVolunteerHours.toString(), icon: Clock, change: "+20%" },
   ];
 
   return (
@@ -94,7 +123,6 @@ const AdminDashboard = () => {
           <p className="text-muted-foreground">Overview of platform performance and analytics</p>
         </motion.div>
 
-        {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat, i) => (
             <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
@@ -114,11 +142,11 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Charts */}
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="donations">Donations</TabsTrigger>
+            <TabsTrigger value="feedback">Feedback ({feedback.length})</TabsTrigger>
             <TabsTrigger value="recent">Recent Activity</TabsTrigger>
           </TabsList>
 
@@ -175,6 +203,38 @@ const AdminDashboard = () => {
                     </LineChart>
                   </ResponsiveContainer>
                 ) : <p className="text-center py-12 text-muted-foreground">No data yet</p>}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="feedback">
+            <Card>
+              <CardHeader><CardTitle className="text-lg flex items-center gap-2"><MessageSquare className="h-5 w-5" /> User Feedback & Stories</CardTitle></CardHeader>
+              <CardContent>
+                {feedback.length === 0 ? (
+                  <p className="text-center py-12 text-muted-foreground">No feedback submitted yet</p>
+                ) : (
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                    {feedback.map((f) => (
+                      <div key={f.id} className="rounded-lg border p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs capitalize">{f.type}</Badge>
+                            <span className="text-xs text-muted-foreground">{new Date(f.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[1,2,3,4,5].map(s => (
+                              <span key={s} className={`text-sm ${s <= f.rating ? "text-yellow-400" : "text-muted"}`}>★</span>
+                            ))}
+                          </div>
+                        </div>
+                        <p className="font-medium text-sm">{f.title}</p>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{f.content}</p>
+                        {f.email && <p className="text-xs text-muted-foreground mt-2">From: {f.email}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
