@@ -18,6 +18,7 @@ const Footer = () => (
         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
           <Link to="/charities" className="hover:text-foreground">Browse Charities</Link>
           <Link to="/stories" className="hover:text-foreground">Impact Stories</Link>
+          <Link to="/leaderboard" className="hover:text-foreground">Leaderboard</Link>
           <Link to="/about" className="hover:text-foreground">About Us</Link>
         </div>
       </div>
@@ -25,6 +26,8 @@ const Footer = () => (
         <h4 className="mb-3 text-sm font-semibold">Support</h4>
         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
           <Link to="/contact" className="hover:text-foreground">Contact Us</Link>
+          <Link to="/feedback" className="hover:text-foreground">Submit Feedback</Link>
+          <Link to="/blockchain" className="hover:text-foreground">Transparency</Link>
           <Link to="/contact" className="hover:text-foreground">FAQs</Link>
         </div>
       </div>
