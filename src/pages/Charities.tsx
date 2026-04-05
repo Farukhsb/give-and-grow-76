@@ -1,24 +1,45 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/Layout";
 import { useCharities } from "@/hooks/use-charities";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Recommendation {
+  category: string;
+  reason: string;
+}
 
 const Charities = () => {
   const { charities, loading } = useCharities();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [urgency, setUrgency] = useState("All");
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
 
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(charities.map((c) => c.category).filter(Boolean)))],
     [charities]
   );
   const urgencies = ["All", "high", "medium", "low"];
+
+  useEffect(() => {
+    if (!user) return;
+    setLoadingRecs(true);
+    supabase.functions.invoke("ai-recommend", {
+      body: { user_id: user.id },
+    }).then(({ data }) => {
+      if (data?.recommendations) setRecommendations(data.recommendations);
+      setLoadingRecs(false);
+    }).catch(() => setLoadingRecs(false));
+  }, [user]);
 
   const filtered = useMemo(() => {
     return charities.filter((c) => {
@@ -39,6 +60,32 @@ const Charities = () => {
           <p className="mt-3 text-muted-foreground">Find a cause you care about and make a real difference.</p>
         </div>
       </section>
+
+      {/* AI Recommendations */}
+      {user && recommendations.length > 0 && (
+        <section className="border-b bg-primary/5 py-6">
+          <div className="container">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-sm">AI-Recommended for You</h3>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {recommendations.map((rec, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCategory(rec.category)}
+                  className={`rounded-full border px-4 py-2 text-sm transition-all hover:border-primary hover:bg-primary/10 ${
+                    category === rec.category ? "border-primary bg-primary/10 font-medium" : ""
+                  }`}
+                >
+                  <span className="font-medium">{rec.category}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">— {rec.reason}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-10">
         <div className="container">
