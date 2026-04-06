@@ -1,7 +1,24 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "@supabase/supabase-js/cors";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-serve(async (req) => {
+async function getGrokKey(): Promise<string | null> {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'grok_api_key')
+      .maybeSingle()
+    return data?.value || null
+  } catch {
+    return null
+  }
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -17,18 +34,36 @@ serve(async (req) => {
 Recommend exactly 3 charities. Return a JSON array with objects having: name, reason (1-2 sentences), category.
 Return ONLY valid JSON array, no other text.`;
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not set");
+    const grokKey = await getGrokKey()
+    let apiUrl: string
+    let authHeader: string
+    let model: string
 
-    const res = await fetch("https://ai.lovable.dev/api/generate", {
+    if (grokKey) {
+      apiUrl = 'https://api.x.ai/v1/chat/completions'
+      authHeader = `Bearer ${grokKey}`
+      model = 'grok-3-mini'
+    } else {
+      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+      if (!lovableKey) throw new Error("No AI API key available");
+      apiUrl = 'https://ai.lovable.dev/v1/chat/completions'
+      authHeader = `Bearer ${lovableKey}`
+      model = 'google/gemini-2.5-flash'
+    }
+
+    const res = await fetch(apiUrl, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      headers: { Authorization: authHeader, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
         messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
       }),
     });
+
+    if (!res.ok) {
+      const errText = await res.text()
+      throw new Error(`AI API error [${res.status}]: ${errText}`)
+    }
 
     const result = await res.json();
     const content = result.choices?.[0]?.message?.content || "[]";
@@ -40,7 +75,7 @@ Return ONLY valid JSON array, no other text.`;
       recommendations = [];
     }
 
-    return new Response(JSON.stringify({ recommendations }), {
+    return new Response(JSON.stringify({ recommendations, provider: grokKey ? 'grok' : 'lovable' }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
