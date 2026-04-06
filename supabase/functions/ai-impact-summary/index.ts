@@ -25,7 +25,7 @@ Make it encouraging, heartfelt, and mention specific causes. Do NOT use markdown
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: 'grok-3-mini',
         messages: [{ role: 'user', content: prompt }],
       }),
     })
