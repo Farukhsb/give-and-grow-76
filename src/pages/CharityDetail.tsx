@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Users, Heart, Loader2 } from "lucide-react";
+
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { useCharity, addDonation } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import DonationReceipt from "@/components/DonationReceipt";
 
 const CharityDetail = () => {
   const { id } = useParams();
@@ -19,6 +21,9 @@ const CharityDetail = () => {
   const { toast } = useToast();
   const [selectedAmount, setSelectedAmount] = useState(25);
   const [donating, setDonating] = useState(false);
+  const [receiptData, setReceiptData] = useState<{
+    donorName: string; charityName: string; amount: number; date: Date; transactionId: string;
+  } | null>(null);
 
   if (loading) {
     return (
@@ -51,9 +56,8 @@ const CharityDetail = () => {
     }
     setDonating(true);
     try {
-      // Update Firestore (real-time counter)
       await addDonation(charity.id, selectedAmount);
-      // Record in Supabase for history/tracking
+      const txId = crypto.randomUUID();
       await supabase.from("donations").insert({
         user_id: user.id,
         charity_id: charity.id,
@@ -61,6 +65,14 @@ const CharityDetail = () => {
         amount: selectedAmount,
         status: "completed",
         payment_method: "demo",
+        receipt_url: txId,
+      });
+      setReceiptData({
+        donorName: user.user_metadata?.full_name || user.email || "Donor",
+        charityName: charity.name,
+        amount: selectedAmount,
+        date: new Date(),
+        transactionId: txId,
       });
       toast({
         title: "Thank you! 🎉",
@@ -182,6 +194,7 @@ const CharityDetail = () => {
           </div>
         </div>
       </div>
+      {receiptData && <DonationReceipt receipt={receiptData} onClose={() => setReceiptData(null)} />}
     </Layout>
   );
 };

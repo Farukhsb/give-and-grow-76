@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, Users, Globe, ArrowRight, Droplets, BookOpen, Utensils, Shield } from "lucide-react";
+import { Heart, Users, Globe, ArrowRight, Droplets, BookOpen, Utensils, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
 import { testimonials, impactStats } from "@/data/demo";
 import { useCharities } from "@/hooks/use-charities";
 import { useEffect, useState, useRef } from "react";
+import CharityMatcher from "@/components/CharityMatcher";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -62,6 +63,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 const Index = () => {
   const { charities, loading } = useCharities();
   const featured = charities.filter((c) => c.featured).slice(0, 4);
+  const [showMatcher, setShowMatcher] = useState(false);
 
   return (
     <Layout>
@@ -81,6 +83,9 @@ const Index = () => {
               </Button>
               <Button asChild variant="outline" size="lg" className="text-base">
                 <Link to="/about">Learn More <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              </Button>
+              <Button size="lg" variant="secondary" className="text-base gap-2" onClick={() => setShowMatcher(true)}>
+                <Sparkles className="h-4 w-4" /> Find My Charity
               </Button>
             </motion.div>
           </motion.div>
@@ -219,6 +224,7 @@ const Index = () => {
           </Button>
         </div>
       </section>
+      {showMatcher && <CharityMatcher onClose={() => setShowMatcher(false)} />}
     </Layout>
   );
 };
