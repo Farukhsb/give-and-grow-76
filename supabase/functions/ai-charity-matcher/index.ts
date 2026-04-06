@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const GROK_API_KEY = Deno.env.get('GROK_API_KEY')
-    if (!GROK_API_KEY) throw new Error('GROK_API_KEY not configured')
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured')
 
     const { cause, helpMethod, location } = await req.json()
 
@@ -22,21 +22,21 @@ Deno.serve(async (req) => {
 Recommend exactly 3 charities. Return a JSON array with objects having: name, reason (1-2 sentences), category.
 Return ONLY valid JSON array, no other text.`
 
-    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROK_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-3-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [{ role: 'user', content: prompt }],
       }),
     })
 
     if (!res.ok) {
       const errText = await res.text()
-      console.error('Grok API error:', res.status, errText)
+      console.error('Lovable AI error:', res.status, errText)
       throw new Error('AI is temporarily unavailable. Please try again.')
     }
 
@@ -51,7 +51,7 @@ Return ONLY valid JSON array, no other text.`
       recommendations = []
     }
 
-    return new Response(JSON.stringify({ recommendations, provider: 'grok' }), {
+    return new Response(JSON.stringify({ recommendations, provider: 'lovable' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {

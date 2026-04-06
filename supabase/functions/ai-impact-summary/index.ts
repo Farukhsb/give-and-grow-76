@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const GROK_API_KEY = Deno.env.get('GROK_API_KEY')
-    if (!GROK_API_KEY) throw new Error('GROK_API_KEY not configured')
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured')
 
     const { displayName, totalDonated, charities, donationCount } = await req.json()
 
@@ -18,28 +18,28 @@ Deno.serve(async (req) => {
 They've made ${donationCount} donations totalling $${totalDonated.toFixed(2)} to these charities: ${charities.join(', ')}.
 Make it encouraging, heartfelt, and mention specific causes. Do NOT use markdown. Return only the summary text.`
 
-    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROK_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-3-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [{ role: 'user', content: prompt }],
       }),
     })
 
     if (!res.ok) {
       const errText = await res.text()
-      console.error('Grok API error:', res.status, errText)
+      console.error('Lovable AI error:', res.status, errText)
       throw new Error('AI is temporarily unavailable. Please try again.')
     }
 
     const result = await res.json()
     const summary = result.choices?.[0]?.message?.content || ''
 
-    return new Response(JSON.stringify({ summary, provider: 'grok' }), {
+    return new Response(JSON.stringify({ summary, provider: 'lovable' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {

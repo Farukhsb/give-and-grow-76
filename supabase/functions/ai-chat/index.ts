@@ -17,8 +17,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const GROK_API_KEY = Deno.env.get('GROK_API_KEY')
-    if (!GROK_API_KEY) throw new Error('GROK_API_KEY not configured')
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured')
 
     const body = await req.json()
     const parsed = MessageSchema.safeParse(body)
@@ -49,14 +49,14 @@ Be warm, concise, and helpful. Use emoji sparingly. If asked about specific char
       })),
     ]
 
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROK_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-3-mini',
+        model: 'google/gemini-2.5-flash',
         messages: aiMessages,
         max_tokens: 500,
       }),
@@ -64,14 +64,14 @@ Be warm, concise, and helpful. Use emoji sparingly. If asked about specific char
 
     if (!response.ok) {
       const errText = await response.text()
-      console.error('Grok API error:', response.status, errText)
+      console.error('Lovable AI error:', response.status, errText)
       throw new Error('AI is temporarily unavailable. Please try again.')
     }
 
     const data = await response.json()
     const reply = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't process that. Please try again."
 
-    return new Response(JSON.stringify({ reply, provider: 'grok' }), {
+    return new Response(JSON.stringify({ reply, provider: 'lovable' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
