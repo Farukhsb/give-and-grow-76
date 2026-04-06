@@ -1,5 +1,6 @@
 import { corsHeaders } from '@supabase/supabase-js/cors'
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const MessageSchema = z.object({
   messages: z.array(z.object({
@@ -8,17 +9,29 @@ const MessageSchema = z.object({
   })).min(1).max(50),
 })
 
+async function getGrokKey(): Promise<string | null> {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'grok_api_key')
+      .maybeSingle()
+    return data?.value || null
+  } catch {
+    return null
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured')
-    }
-
     const body = await req.json()
     const parsed = MessageSchema.safeParse(body)
     if (!parsed.success) {
@@ -29,10 +42,9 @@ Deno.serve(async (req) => {
 
     const { messages } = parsed.data
 
-    const aiMessages = [
-      {
-        role: 'system',
-        content: `You are CharityBot, a helpful AI assistant for CharityApp — a platform that connects donors with verified charities worldwide. You help users:
+    const systemMessage = {
+      role: 'system',
+      content: `You are CharityBot, a helpful AI assistant for CharityApp — a platform that connects donors with verified charities worldwide. You help users:
 - Find charities and causes to donate to
 - Understand how donations work and where money goes
 - Learn about volunteering opportunities
@@ -41,21 +53,42 @@ Deno.serve(async (req) => {
 - Provide encouragement and information about charitable giving
 
 Be warm, concise, and helpful. Use emoji sparingly. If asked about specific charities, mention categories like Water & Sanitation, Education, Food Security, Healthcare, Environment, and Housing. The platform supports donations via Credit Card, PayPal, Bank Transfer, and Apple Pay. 95% of every donation goes directly to the charity.`
-      },
+    }
+
+    const aiMessages = [
+      systemMessage,
       ...messages.map((m: { role: string; content: string }) => ({
         role: m.role === 'bot' ? 'assistant' : 'user',
         content: m.content,
       })),
     ]
 
-    const response = await fetch('https://ai.lovable.dev/v1/chat/completions', {
+    // Try Grok first, fall back to Lovable AI
+    const grokKey = await getGrokKey()
+    let apiUrl: string
+    let authHeader: string
+    let model: string
+
+    if (grokKey) {
+      apiUrl = 'https://api.x.ai/v1/chat/completions'
+      authHeader = `Bearer ${grokKey}`
+      model = 'grok-3-mini'
+    } else {
+      const lovableKey = Deno.env.get('LOVABLE_API_KEY')
+      if (!lovableKey) throw new Error('No AI API key available')
+      apiUrl = 'https://ai.lovable.dev/v1/chat/completions'
+      authHeader = `Bearer ${lovableKey}`
+      model = 'google/gemini-2.5-flash'
+    }
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': authHeader,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model,
         messages: aiMessages,
         max_tokens: 500,
       }),
@@ -69,7 +102,7 @@ Be warm, concise, and helpful. Use emoji sparingly. If asked about specific char
     const data = await response.json()
     const reply = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't process that. Please try again."
 
-    return new Response(JSON.stringify({ reply }), {
+    return new Response(JSON.stringify({ reply, provider: grokKey ? 'grok' : 'lovable' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
