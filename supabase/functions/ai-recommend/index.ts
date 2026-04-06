@@ -12,8 +12,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured')
+    const GROK_API_KEY = Deno.env.get('GROK_API_KEY')
+    if (!GROK_API_KEY) throw new Error('GROK_API_KEY not configured')
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -29,7 +29,6 @@ Deno.serve(async (req) => {
 
     const { user_id } = parsed.data
 
-    // Get user's donation history
     const { data: donations } = await supabase
       .from('donations')
       .select('charity_name, amount')
@@ -41,14 +40,14 @@ Deno.serve(async (req) => {
       ? `User has donated to: ${donations.map(d => `${d.charity_name} ($${d.amount})`).join(', ')}`
       : 'User has no donation history yet.'
 
-    const response = await fetch('https://ai.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${GROK_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'grok-beta',
         messages: [
           {
             role: 'system',
@@ -61,7 +60,9 @@ Deno.serve(async (req) => {
     })
 
     if (!response.ok) {
-      throw new Error(`AI API error [${response.status}]`)
+      const errText = await response.text()
+      console.error('Grok API error:', response.status, errText)
+      throw new Error('AI is temporarily unavailable. Please try again.')
     }
 
     const data = await response.json()
@@ -83,14 +84,9 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     console.error('Recommendation error:', error)
-    return new Response(JSON.stringify({
-      recommendations: [
-        { category: "Education", reason: "Education empowers communities for lasting change" },
-        { category: "Healthcare", reason: "Healthcare access saves lives" },
-        { category: "Water & Sanitation", reason: "Clean water is a basic human right" },
-      ]
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const msg = error instanceof Error ? error.message : 'AI is temporarily unavailable. Please try again.'
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 })
