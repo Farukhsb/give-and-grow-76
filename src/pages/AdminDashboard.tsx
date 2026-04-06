@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   BarChart3, Users, DollarSign, TrendingUp, Activity, ArrowUpRight,
-  Heart, Globe, Shield, MessageSquare, Clock
+  Heart, Globe, Shield, MessageSquare, Clock, Settings2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import AISettings from "@/components/AISettings";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend
@@ -148,6 +149,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="donations">Donations</TabsTrigger>
             <TabsTrigger value="feedback">Feedback ({feedback.length})</TabsTrigger>
             <TabsTrigger value="recent">Recent Activity</TabsTrigger>
+            <TabsTrigger value="ai-settings"><Settings2 className="h-3 w-3 mr-1" /> AI Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="grid gap-4 md:grid-cols-2">
@@ -263,6 +265,10 @@ const AdminDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="ai-settings">
+            <AISettings />
           </TabsContent>
         </Tabs>
       </div>
