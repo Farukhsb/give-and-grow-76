@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/Layout";
+import ImpactSummary from "@/components/ImpactSummary";
+import CharityMatcher from "@/components/CharityMatcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +52,7 @@ const Dashboard = () => {
   const [editBio, setEditBio] = useState("");
   const [totalDonated, setTotalDonated] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
+  const [showMatcher, setShowMatcher] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -146,6 +149,9 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Your giving journey at a glance</p>
           </div>
           <div className="flex gap-2">
+            <Button size="sm" onClick={() => setShowMatcher(true)}>
+              <Heart className="h-4 w-4 mr-1" /> Find My Charity
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setEditing(!editing)}>
               <Edit className="h-4 w-4 mr-1" /> Edit Profile
             </Button>
@@ -195,6 +201,8 @@ const Dashboard = () => {
             </motion.div>
           ))}
         </div>
+
+        <ImpactSummary donations={donations} displayName={profile?.display_name || "Friend"} />
 
         <Tabs defaultValue="donations" className="space-y-4">
           <TabsList>
@@ -323,6 +331,7 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+      {showMatcher && <CharityMatcher onClose={() => setShowMatcher(false)} />}
     </Layout>
   );
 };
