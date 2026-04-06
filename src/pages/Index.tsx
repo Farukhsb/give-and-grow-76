@@ -224,6 +224,7 @@ const Index = () => {
           </Button>
         </div>
       </section>
+      {showMatcher && <CharityMatcher onClose={() => setShowMatcher(false)} />}
     </Layout>
   );
 };
