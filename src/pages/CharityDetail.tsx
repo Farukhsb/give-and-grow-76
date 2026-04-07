@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
 import { stories } from "@/data/demo";
-import { useCharity, addDonation } from "@/hooks/use-charities";
+import { useCharity, addDonation, getImpactMessage } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DonationReceipt from "@/components/DonationReceipt";
+import QuickDonate from "@/components/QuickDonate";
 
 const CharityDetail = () => {
   const { id } = useParams();
@@ -76,7 +77,7 @@ const CharityDetail = () => {
       });
       toast({
         title: "Thank you! 🎉",
-        description: `Your $${selectedAmount} donation to ${charity.name} has been recorded.`,
+        description: getImpactMessage(selectedAmount),
       });
     } catch {
       toast({ title: "Donation failed", description: "Something went wrong.", variant: "destructive" });
@@ -136,7 +137,14 @@ const CharityDetail = () => {
           </div>
 
           {/* Sidebar */}
-          <div>
+          <div className="space-y-4">
+            {/* Quick Donate Card */}
+            <Card>
+              <CardContent className="p-4">
+                <QuickDonate charityId={charity.id} charityName={charity.name} />
+              </CardContent>
+            </Card>
+
             <Card className="sticky top-20">
               <CardContent className="p-6">
                 <h3 className="font-serif text-xl font-bold">Donate to {charity.name}</h3>
