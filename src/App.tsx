@@ -22,6 +22,7 @@ import Leaderboard from "./pages/Leaderboard";
 import BlockchainTracker from "./pages/BlockchainTracker";
 import Feedback from "./pages/Feedback";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/blockchain" element={<BlockchainTracker />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Chatbot />

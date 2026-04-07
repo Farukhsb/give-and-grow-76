@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 import { useCharities } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import QuickDonate from "@/components/QuickDonate";
 
 interface Recommendation {
   category: string;
@@ -138,6 +139,7 @@ const Charities = () => {
                             <div className="h-full rounded-full bg-primary" style={{ width: `${(charity.amountRaised / charity.goalAmount) * 100}%` }} />
                           </div>
                           <p className="mt-1 text-xs text-muted-foreground">{charity.donors.toLocaleString()} donors</p>
+                          <QuickDonate charityId={charity.id} charityName={charity.name} compact />
                         </div>
                       </CardContent>
                     </Card>

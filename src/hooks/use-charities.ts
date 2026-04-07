@@ -80,10 +80,27 @@ export function useCharity(id: string | undefined) {
   return { charity, loading };
 }
 
-export async function addDonation(charityId: string, amount: number) {
+export async function addDonation(
+  charityId: string,
+  amount: number,
+  donationType: "standard" | "micro" | "student" = "standard"
+) {
   const ref = doc(db, "charities", charityId);
-  await updateDoc(ref, {
+  const updates: Record<string, unknown> = {
     amountRaised: increment(amount),
     donors: increment(1),
-  });
+    totalDonations: increment(1),
+  };
+  if (donationType === "micro") {
+    updates.microDonationCount = increment(1);
+  }
+  await updateDoc(ref, updates);
+}
+
+export function getImpactMessage(amount: number): string {
+  if (amount <= 1) return `£${amount} helped provide clean water for a day`;
+  if (amount <= 3) return `£${amount} helped provide ${Math.floor(amount / 1.5)} meals`;
+  if (amount <= 5) return `£${amount} helped supply school materials for a child`;
+  if (amount <= 10) return `£${amount} helped fund medical supplies for a family`;
+  return `£${amount} is making a real difference in someone's life`;
 }
