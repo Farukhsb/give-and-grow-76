@@ -10,8 +10,6 @@ import { useCharities } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import QuickDonate from "@/components/QuickDonate";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Recommendation {
   category: string;
