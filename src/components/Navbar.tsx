@@ -18,7 +18,7 @@ const navLinks = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { user, profile } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
@@ -46,7 +46,7 @@ const Navbar = () => {
 
           {user ? (
             <>
-              {profile?.role === "admin" && (
+              {isAdmin && (
                 <Button asChild variant="ghost" size="sm">
                   <Link to="/admin"><ShieldCheck className="h-4 w-4 mr-1" /> Admin</Link>
                 </Button>
@@ -91,7 +91,7 @@ const Navbar = () => {
           ))}
           {user ? (
             <>
-              {profile?.role === "admin" && (
+              {isAdmin && (
                 <Link to="/admin" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Admin Panel</Link>
               )}
               <Link to="/feedback" onClick={() => setMobileOpen(false)} className="block rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent">Feedback</Link>

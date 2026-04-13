@@ -4,6 +4,7 @@ import { MessageCircle, X, Send, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Message {
   id: string;
@@ -12,6 +13,7 @@ interface Message {
 }
 
 const Chatbot = () => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: "welcome", role: "bot", content: "Hi! 👋 I'm CharityBot, your AI assistant. Ask me anything about donating, volunteering, or finding charities!" },
@@ -26,6 +28,17 @@ const Chatbot = () => {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
+    if (!user) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "bot",
+          content: "Please sign in to use CharityBot.",
+        },
+      ]);
+      return;
+    }
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: input };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);

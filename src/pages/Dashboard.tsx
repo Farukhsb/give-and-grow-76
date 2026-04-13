@@ -42,7 +42,7 @@ interface VolunteerRow {
 }
 
 const Dashboard = () => {
-  const { user, profile, loading, signOut, updateProfile } = useAuth();
+  const { user, profile, isAdmin, loading, signOut, updateProfile } = useAuth();
   const { toast } = useToast();
   const { charities } = useCharities();
   const [donations, setDonations] = useState<DonationRow[]>([]);
@@ -53,6 +53,7 @@ const Dashboard = () => {
   const [totalDonated, setTotalDonated] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
   const [showMatcher, setShowMatcher] = useState(false);
+  const completedDonations = donations.filter((donation) => donation.status === "completed");
 
   useEffect(() => {
     if (!user) return;
@@ -64,7 +65,11 @@ const Dashboard = () => {
       .then(({ data }) => {
         if (data) {
           setDonations(data as DonationRow[]);
-          setTotalDonated(data.reduce((sum, d) => sum + Number(d.amount), 0));
+          setTotalDonated(
+            data
+              .filter((donation) => donation.status === "completed")
+              .reduce((sum, donation) => sum + Number(donation.amount), 0)
+          );
         }
       });
 
@@ -133,7 +138,7 @@ const Dashboard = () => {
 
   const statCards = [
     { icon: DollarSign, label: "Total Donated", value: `$${totalDonated.toFixed(2)}`, color: "text-primary" },
-    { icon: Heart, label: "Donations Made", value: donations.length.toString(), color: "text-secondary" },
+    { icon: Heart, label: "Verified Donations", value: completedDonations.length.toString(), color: "text-secondary" },
     { icon: Clock, label: "Volunteer Hours", value: totalHours.toString(), color: "text-primary" },
     { icon: Trophy, label: "Points Earned", value: (profile?.points ?? 0).toString(), color: "text-secondary" },
   ];
@@ -172,7 +177,7 @@ const Dashboard = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Role</Label>
-                    <Input value={profile?.role ?? "donor"} disabled className="bg-muted" />
+                    <Input value={isAdmin ? "admin" : profile?.role ?? "donor"} disabled className="bg-muted" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -202,7 +207,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        <ImpactSummary donations={donations} displayName={profile?.display_name || "Friend"} />
+        <ImpactSummary donations={completedDonations} displayName={profile?.display_name || "Friend"} />
 
         <Tabs defaultValue="donations" className="space-y-4">
           <TabsList>
@@ -219,6 +224,7 @@ const Dashboard = () => {
                   <div className="text-center py-12 text-muted-foreground">
                     <HandHeart className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No donations yet.</p>
+                    <p className="mt-2 text-sm">Demo pledges stay pending until a verified payment flow is connected.</p>
                     <Button asChild className="mt-4" variant="outline">
                       <Link to="/charities">Browse Charities <ChevronRight className="h-4 w-4 ml-1" /></Link>
                     </Button>

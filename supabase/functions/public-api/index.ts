@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
 
     if (endpoint === 'stats') {
       const [donRes, profRes] = await Promise.all([
-        supabase.from('donations').select('amount', { count: 'exact' }),
+        supabase.from('donations').select('amount', { count: 'exact' }).eq('status', 'completed'),
         supabase.from('profiles').select('id', { count: 'exact' }),
       ])
 
@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
       const { data } = await supabase
         .from('donations')
         .select('charity_name, amount, status, created_at')
+        .eq('status', 'completed')
         .order('created_at', { ascending: false })
         .limit(limit)
 

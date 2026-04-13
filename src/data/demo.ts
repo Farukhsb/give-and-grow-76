@@ -183,7 +183,7 @@ export const faqs = [
   },
   {
     question: "Are my donations tax-deductible?",
-    answer: "Yes! All charities on our platform are registered nonprofit organizations. You'll receive a tax receipt for every donation, which you can use for tax deduction purposes in most countries.",
+    answer: "Not in the current demo flow. The app stores pending pledges, not verified payments, so official tax receipts should only be issued after a real payment processor is connected.",
   },
   {
     question: "How do you verify charities?",

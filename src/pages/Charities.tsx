@@ -34,9 +34,7 @@ const Charities = () => {
   useEffect(() => {
     if (!user) return;
     setLoadingRecs(true);
-    supabase.functions.invoke("ai-recommend", {
-      body: { user_id: user.id },
-    }).then(({ data }) => {
+    supabase.functions.invoke("ai-recommend").then(({ data }) => {
       if (data?.recommendations) setRecommendations(data.recommendations);
       setLoadingRecs(false);
     }).catch(() => setLoadingRecs(false));

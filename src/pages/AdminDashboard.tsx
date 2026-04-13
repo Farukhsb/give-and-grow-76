@@ -54,7 +54,7 @@ interface VolunteerRow {
 }
 
 const AdminDashboard = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const [donations, setDonations] = useState<DonationRow[]>([]);
   const [profileCount, setProfileCount] = useState(0);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
@@ -62,11 +62,11 @@ const AdminDashboard = () => {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (!user || profile?.role !== "admin") return;
+    if (!user || !isAdmin) return;
 
     const fetchData = async () => {
       const [donRes, profRes, volRes] = await Promise.all([
-        supabase.from("donations").select("*").order("created_at", { ascending: false }),
+        supabase.from("donations").select("*").eq("status", "completed").order("created_at", { ascending: false }),
         supabase.from("profiles").select("id", { count: "exact" }),
         supabase.from("volunteer_assignments").select("*"),
       ]);
@@ -75,7 +75,8 @@ const AdminDashboard = () => {
       setVolunteers((volRes.data as VolunteerRow[]) || []);
 
       // Fetch feedback
-      const { data: fbData } = await (supabase.from("feedback" as any) as any)
+      const { data: fbData } = await supabase
+        .from("feedback")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
@@ -84,11 +85,11 @@ const AdminDashboard = () => {
       setLoadingData(false);
     };
     fetchData();
-  }, [user, profile]);
+  }, [user, isAdmin]);
 
   if (loading) return <Layout><div className="flex h-[60vh] items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
   if (!user) return <Navigate to="/auth" replace />;
-  if (profile?.role !== "admin") return <Layout><div className="container py-20 text-center"><Shield className="h-16 w-16 mx-auto text-muted-foreground mb-4" /><h1 className="font-serif text-2xl font-bold">Access Denied</h1><p className="text-muted-foreground mt-2">Admin access required.</p></div></Layout>;
+  if (!isAdmin) return <Layout><div className="container py-20 text-center"><Shield className="h-16 w-16 mx-auto text-muted-foreground mb-4" /><h1 className="font-serif text-2xl font-bold">Access Denied</h1><p className="text-muted-foreground mt-2">Admin access required.</p></div></Layout>;
 
   const totalRevenue = donations.reduce((s, d) => s + Number(d.amount), 0);
   const completedDonations = donations.filter((d) => d.status === "completed").length;

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Zap, Loader2, Coins } from "lucide-react";
+import { Coins, Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { addDonation, getImpactMessage } from "@/hooks/use-charities";
+import { getImpactMessage } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -29,22 +29,25 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
       toast({ title: "Please sign in", description: "You need to sign in to donate.", variant: "destructive" });
       return;
     }
+
     setDonatingAmount(amount);
     try {
-      await addDonation(charityId, amount, type);
-      const txId = crypto.randomUUID();
-      await supabase.from("donations").insert({
+      const { error } = await supabase.from("donations").insert({
         user_id: user.id,
         charity_id: charityId,
         charity_name: charityName,
         amount,
-        status: "completed",
-        payment_method: type,
-        receipt_url: txId,
+        status: "pending",
+        payment_method: `demo_${type}`,
       });
+      if (error) throw error;
+
       const msg = getImpactMessage(amount);
       setImpactMsg(msg);
-      toast({ title: "Thank you! 🎉", description: msg });
+      toast({
+        title: "Demo donation saved",
+        description: `Recorded as a pending pledge until a verified payment flow is connected. ${msg}`,
+      });
       setTimeout(() => setImpactMsg(null), 5000);
     } catch {
       toast({ title: "Donation failed", description: "Something went wrong.", variant: "destructive" });
@@ -56,7 +59,7 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
   const handleStudentDonate = () => {
     const val = parseFloat(studentAmount);
     if (isNaN(val) || val < 0.5 || val > 10) {
-      toast({ title: "Invalid amount", description: "Please enter between £0.50 and £10.", variant: "destructive" });
+      toast({ title: "Invalid amount", description: "Please enter between GBP0.50 and GBP10.", variant: "destructive" });
       return;
     }
     handleQuickDonate(val, "student");
@@ -66,53 +69,58 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
 
   return (
     <div className={`space-y-2 ${compact ? "" : "mt-4"}`}>
-      {/* Quick Donate header */}
       <div className="flex items-center gap-1.5">
-        <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary border-primary/20 text-[10px] px-1.5 py-0.5">
+        <Badge variant="secondary" className="gap-1 bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary border-primary/20">
           <Zap className="h-3 w-3" /> Quick Donate
         </Badge>
       </div>
 
-      {/* Micro-donation buttons */}
       <div className="flex gap-1.5">
         {MICRO_AMOUNTS.map((amount) => (
           <Button
             key={amount}
             size="sm"
             variant="outline"
-            className="flex-1 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground font-semibold text-xs h-8"
+            className="h-8 flex-1 border-primary/30 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground"
             disabled={donatingAmount !== null}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuickDonate(amount, "micro"); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleQuickDonate(amount, "micro");
+            }}
           >
-            {donatingAmount === amount ? <Loader2 className="h-3 w-3 animate-spin" /> : `£${amount}`}
+            {donatingAmount === amount ? <Loader2 className="h-3 w-3 animate-spin" /> : `GBP ${amount}`}
           </Button>
         ))}
       </div>
 
-      {/* Student leftover budget */}
       {!compact && (
         <>
           {!showStudentInput ? (
             <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowStudentInput(true); }}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors w-full"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowStudentInput(true);
+              }}
+              className="flex w-full items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
             >
               <Coins className="h-3 w-3" />
               <span>Turn spare change into impact</span>
             </button>
           ) : (
-            <div className="flex gap-1.5 items-center" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
               <Input
                 type="number"
                 min={0.5}
                 max={10}
                 step={0.5}
-                placeholder="£0.50 – £10"
+                placeholder="GBP0.50 - GBP10"
                 value={studentAmount}
                 onChange={(e) => setStudentAmount(e.target.value)}
-                className="h-8 text-xs flex-1"
+                className="h-8 flex-1 text-xs"
               />
-              <Button size="sm" className="h-8 text-xs px-3" onClick={handleStudentDonate} disabled={donatingAmount !== null}>
+              <Button size="sm" className="h-8 px-3 text-xs" onClick={handleStudentDonate} disabled={donatingAmount !== null}>
                 {donatingAmount !== null ? <Loader2 className="h-3 w-3 animate-spin" /> : "Give"}
               </Button>
             </div>
@@ -120,10 +128,9 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
         </>
       )}
 
-      {/* Impact feedback */}
       {impactMsg && (
-        <p className="text-xs font-medium text-primary animate-in fade-in slide-in-from-bottom-1 duration-300">
-          ✨ {impactMsg}
+        <p className="animate-in fade-in slide-in-from-bottom-1 text-xs font-medium text-primary duration-300">
+          Pending pledge: {impactMsg}
         </p>
       )}
     </div>

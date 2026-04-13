@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { X, Download, CheckCircle } from "lucide-react";
+import { CheckCircle, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -17,27 +17,25 @@ export default function DonationReceipt({ receipt, onClose }: { receipt: Receipt
 
   const handleDownload = () => {
     const content = `
-DONATION RECEIPT
+DEMO DONATION CONFIRMATION
 =====================================
 
-Give & Grow - Official Receipt
+Give & Grow - Pending Pledge
 
-Transaction Reference: ${receipt.transactionId}
+Reference: ${receipt.transactionId}
 Date: ${receipt.date.toLocaleString()}
 
 Donor: ${receipt.donorName}
 Charity: ${receipt.charityName}
 Amount: $${receipt.amount.toFixed(2)}
 
-Status: Completed ✓
+Status: Pending verification
 
 -------------------------------------
-Thank you for your generous donation!
-Your contribution is making a real
-difference in the world.
-
-This receipt may be used for tax
-deduction purposes.
+This file confirms that a demo pledge
+was saved in the app. It is not an
+official payment receipt and should
+not be used for tax deduction claims.
 
 Give & Grow © ${new Date().getFullYear()}
 =====================================
@@ -47,19 +45,19 @@ Give & Grow © ${new Date().getFullYear()}
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `receipt-${receipt.transactionId.slice(0, 8)}.txt`;
+    a.download = `pledge-${receipt.transactionId.slice(0, 8)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
       <Card className="w-full max-w-md border-primary/20 shadow-xl">
         <CardContent className="p-6">
-          <div className="flex justify-between items-start">
+          <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-6 w-6 text-green-500" />
-              <h3 className="font-serif text-xl font-bold">Donation Successful!</h3>
+              <h3 className="font-serif text-xl font-bold">Pledge Saved</h3>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -69,14 +67,14 @@ Give & Grow © ${new Date().getFullYear()}
           <div ref={receiptRef} className="mt-4 space-y-4 rounded-lg border bg-card p-4">
             <div className="text-center">
               <p className="font-serif text-lg font-bold text-primary">Give & Grow</p>
-              <p className="text-xs text-muted-foreground">Official Donation Receipt</p>
+              <p className="text-xs text-muted-foreground">Pending donation confirmation</p>
             </div>
 
             <Separator />
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Transaction Ref</span>
+                <span className="text-muted-foreground">Reference</span>
                 <span className="font-mono text-xs">{receipt.transactionId.slice(0, 8).toUpperCase()}</span>
               </div>
               <div className="flex justify-between">
@@ -103,14 +101,15 @@ Give & Grow © ${new Date().getFullYear()}
             <Separator />
 
             <p className="text-center text-xs text-muted-foreground">
-              Thank you for your generous donation! 💚<br />
-              This receipt may be used for tax deduction purposes.
+              This is a demo confirmation only.
+              <br />
+              It is not an official payment receipt.
             </p>
           </div>
 
           <div className="mt-4 flex gap-2">
             <Button className="flex-1 gap-2" onClick={handleDownload}>
-              <Download className="h-4 w-4" /> Download Receipt
+              <Download className="h-4 w-4" /> Download Confirmation
             </Button>
             <Button variant="outline" className="flex-1" onClick={onClose}>
               Close

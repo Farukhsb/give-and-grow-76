@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import {
   collection,
   onSnapshot,
-  doc,
-  increment,
-  updateDoc,
   QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -78,23 +75,6 @@ export function useCharity(id: string | undefined) {
   }, [id]);
 
   return { charity, loading };
-}
-
-export async function addDonation(
-  charityId: string,
-  amount: number,
-  donationType: "standard" | "micro" | "student" = "standard"
-) {
-  const ref = doc(db, "charities", charityId);
-  const updates: Record<string, unknown> = {
-    amountRaised: increment(amount),
-    donors: increment(1),
-    totalDonations: increment(1),
-  };
-  if (donationType === "micro") {
-    updates.microDonationCount = increment(1);
-  }
-  await updateDoc(ref, updates);
 }
 
 export function getImpactMessage(amount: number): string {

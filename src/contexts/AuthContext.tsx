@@ -13,15 +13,22 @@ interface Profile {
   badges: string[] | null;
 }
 
+interface ProfileUpdate {
+  display_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  isAdmin: boolean;
   loading: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  updateProfile: (updates: ProfileUpdate) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -31,15 +38,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-    setProfile(data);
+    const [{ data: profileData }, { data: roleData }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single(),
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId),
+    ]);
+
+    setProfile(profileData);
+    setIsAdmin((roleData || []).some((row) => row.role === "admin"));
   };
 
   useEffect(() => {
@@ -51,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => fetchProfile(session.user.id), 0);
         } else {
           setProfile(null);
+          setIsAdmin(false);
         }
         setLoading(false);
       }
@@ -61,6 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+      } else {
+        setIsAdmin(false);
       }
       setLoading(false);
     });
@@ -88,9 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setIsAdmin(false);
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = async (updates: ProfileUpdate) => {
     if (!user) return;
     await supabase.from("profiles").update(updates).eq("user_id", user.id);
     await fetchProfile(user.id);
@@ -102,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, loading, signUp, signIn, signOut, updateProfile, refreshProfile }}
+      value={{ user, session, profile, isAdmin, loading, signUp, signIn, signOut, updateProfile, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>

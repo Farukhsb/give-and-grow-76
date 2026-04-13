@@ -20,7 +20,7 @@ export default function AISettings() {
             <div className="space-y-1">
               <p className="font-medium">This app now uses built-in AI.</p>
               <p className="text-sm text-muted-foreground">
-                Chat, recommendations, charity matching, and impact summaries run through the built-in backend AI with no external API key required.
+                Chat, recommendations, charity matching, and impact summaries run through protected backend functions. Provider credentials stay on the server and are not exposed to the client.
               </p>
             </div>
           </div>

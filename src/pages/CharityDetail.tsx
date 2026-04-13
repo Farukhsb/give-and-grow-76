@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, MapPin, Users, Heart, Loader2 } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, Heart, Loader2, MapPin, Users } from "lucide-react";
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
 import { stories } from "@/data/demo";
-import { useCharity, addDonation, getImpactMessage } from "@/hooks/use-charities";
+import { getImpactMessage, useCharity } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,11 @@ const CharityDetail = () => {
   const [selectedAmount, setSelectedAmount] = useState(25);
   const [donating, setDonating] = useState(false);
   const [receiptData, setReceiptData] = useState<{
-    donorName: string; charityName: string; amount: number; date: Date; transactionId: string;
+    donorName: string;
+    charityName: string;
+    amount: number;
+    date: Date;
+    transactionId: string;
   } | null>(null);
 
   if (loading) {
@@ -41,13 +45,15 @@ const CharityDetail = () => {
       <Layout>
         <div className="container py-20 text-center">
           <h1 className="font-serif text-2xl font-bold">Charity not found</h1>
-          <Button asChild className="mt-4"><Link to="/charities">Back to Charities</Link></Button>
+          <Button asChild className="mt-4">
+            <Link to="/charities">Back to Charities</Link>
+          </Button>
         </div>
       </Layout>
     );
   }
 
-  const relatedStories = stories.filter((s) => s.charityId === charity.id);
+  const relatedStories = stories.filter((story) => story.charityId === charity.id);
   const progress = charity.goalAmount > 0 ? (charity.amountRaised / charity.goalAmount) * 100 : 0;
 
   const handleDonate = async () => {
@@ -55,29 +61,30 @@ const CharityDetail = () => {
       toast({ title: "Please sign in", description: "You need to sign in to donate.", variant: "destructive" });
       return;
     }
+
     setDonating(true);
     try {
-      await addDonation(charity.id, selectedAmount);
-      const txId = crypto.randomUUID();
-      await supabase.from("donations").insert({
+      const transactionId = crypto.randomUUID();
+      const { error } = await supabase.from("donations").insert({
         user_id: user.id,
         charity_id: charity.id,
         charity_name: charity.name,
         amount: selectedAmount,
-        status: "completed",
-        payment_method: "demo",
-        receipt_url: txId,
+        status: "pending",
+        payment_method: "demo_detail",
       });
+      if (error) throw error;
+
       setReceiptData({
         donorName: user.user_metadata?.full_name || user.email || "Donor",
         charityName: charity.name,
         amount: selectedAmount,
         date: new Date(),
-        transactionId: txId,
+        transactionId,
       });
       toast({
-        title: "Thank you! 🎉",
-        description: getImpactMessage(selectedAmount),
+        title: "Demo donation saved",
+        description: `Recorded as a pending pledge until a verified payment flow is connected. ${getImpactMessage(selectedAmount)}`,
       });
     } catch {
       toast({ title: "Donation failed", description: "Something went wrong.", variant: "destructive" });
@@ -90,7 +97,9 @@ const CharityDetail = () => {
     <Layout>
       <div className="container py-8">
         <Button asChild variant="ghost" size="sm" className="mb-6">
-          <Link to="/charities"><ArrowLeft className="mr-1 h-4 w-4" /> Back to Charities</Link>
+          <Link to="/charities">
+            <ArrowLeft className="mr-1 h-4 w-4" /> Back to Charities
+          </Link>
         </Button>
 
         <div className="grid gap-8 lg:grid-cols-3">
@@ -104,12 +113,17 @@ const CharityDetail = () => {
               <div className="flex flex-wrap gap-2">
                 {charity.category && <Badge variant="secondary">{charity.category}</Badge>}
                 {charity.urgency && (
-                  <Badge variant={charity.urgency === "high" ? "destructive" : "outline"} className="capitalize">{charity.urgency} urgency</Badge>
+                  <Badge variant={charity.urgency === "high" ? "destructive" : "outline"} className="capitalize">
+                    {charity.urgency} urgency
+                  </Badge>
                 )}
               </div>
               <h1 className="mt-4 font-serif text-3xl font-bold md:text-4xl">{charity.name}</h1>
               {charity.location && (
-                <p className="mt-1 flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" />{charity.location}</p>
+                <p className="mt-1 flex items-center gap-1 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  {charity.location}
+                </p>
               )}
               <p className="mt-6 leading-relaxed text-muted-foreground">{charity.longDescription || charity.description}</p>
             </div>
@@ -136,9 +150,7 @@ const CharityDetail = () => {
             )}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-4">
-            {/* Quick Donate Card */}
             <Card>
               <CardContent className="p-4">
                 <QuickDonate charityId={charity.id} charityName={charity.name} />
@@ -156,8 +168,12 @@ const CharityDetail = () => {
                   <div className="mt-2 h-3 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
                   </div>
-                  <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"><Users className="h-3.5 w-3.5" />{charity.donors.toLocaleString()} donors</p>
+                  <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
+                    <Users className="h-3.5 w-3.5" />
+                    {charity.donors.toLocaleString()} donors
+                  </p>
                 </div>
+
                 <div className="mt-6 grid grid-cols-4 gap-2">
                   {[10, 25, 50, 100].map((amount) => (
                     <Button key={amount} variant={selectedAmount === amount ? "default" : "outline"} size="sm" onClick={() => setSelectedAmount(amount)}>
@@ -167,15 +183,18 @@ const CharityDetail = () => {
                 </div>
 
                 <div className="mt-5">
-                  <p className="text-sm font-medium mb-2">Payment Method</p>
+                  <p className="mb-2 text-sm font-medium">Payment Method</p>
                   <RadioGroup defaultValue="card" className="grid grid-cols-2 gap-2">
                     {[
-                      { value: "card", label: "💳 Card", desc: "Visa / Mastercard" },
-                      { value: "paypal", label: "🅿️ PayPal", desc: "Pay with PayPal" },
-                      { value: "bank", label: "🏦 Bank", desc: "Bank Transfer" },
-                      { value: "apple", label: "🍎 Apple Pay", desc: "Quick checkout" },
+                      { value: "card", label: "Card", desc: "Visa / Mastercard" },
+                      { value: "paypal", label: "PayPal", desc: "Pay with PayPal" },
+                      { value: "bank", label: "Bank", desc: "Bank Transfer" },
+                      { value: "apple", label: "Apple Pay", desc: "Quick checkout" },
                     ].map((method) => (
-                      <label key={method.value} className="flex cursor-pointer items-center gap-2 rounded-lg border border-input p-2.5 transition-colors hover:bg-accent has-[data-state=checked]:border-primary has-[data-state=checked]:bg-primary/5">
+                      <label
+                        key={method.value}
+                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-input p-2.5 transition-colors hover:bg-accent has-[data-state=checked]:border-primary has-[data-state=checked]:bg-primary/5"
+                      >
                         <RadioGroupItem value={method.value} className="sr-only" />
                         <div>
                           <p className="text-sm font-medium leading-none">{method.label}</p>
@@ -188,15 +207,20 @@ const CharityDetail = () => {
 
                 {!user && (
                   <p className="mt-3 text-center text-sm text-muted-foreground">
-                    <Link to="/auth" className="text-primary hover:underline">Sign in</Link> to donate and track your contributions.
+                    <Link to="/auth" className="text-primary hover:underline">
+                      Sign in
+                    </Link>{" "}
+                    to donate and track your contributions.
                   </p>
                 )}
 
                 <Button className="mt-4 w-full gap-2" size="lg" onClick={handleDonate} disabled={donating}>
                   {donating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className="h-4 w-4" />}
-                  {donating ? "Processing..." : "Donate Now"}
+                  {donating ? "Processing..." : "Save Demo Pledge"}
                 </Button>
-                <p className="mt-3 text-center text-xs text-muted-foreground">Secure payment · Tax deductible · 95% goes to charity</p>
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Pending until a verified payment flow is connected.
+                </p>
               </CardContent>
             </Card>
           </div>
