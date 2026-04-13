@@ -61,6 +61,14 @@ Before exposing the Cloudflare domain publicly, deploy the backend changes:
    - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `LOVABLE_API_KEY`
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `PUBLIC_SITE_URL`
+4. Configure the Stripe webhook endpoint to point at:
+   - `https://<your-project-ref>.supabase.co/functions/v1/stripe-webhook`
+5. Subscribe the webhook to:
+   - `checkout.session.completed`
+   - `checkout.session.expired`
 
 ## Supabase auth settings
 
@@ -86,11 +94,10 @@ At the zone level:
 
 ## Current donation flow
 
-The current codebase stores demo pledges as `pending`. It does not process real payments yet.
+The current codebase is wired for production one-time payments through Stripe Checkout.
 
-That means:
-- no official tax receipts
-- no verified payment capture
-- no server-confirmed completed donations
+- Checkout sessions are created server-side.
+- Donation rows start as `pending`.
+- Stripe webhooks mark verified payments as `completed`.
 
-Before launching for real donations, connect a payment processor and move completion logic server-side.
+Recurring billing is not implemented yet.

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, Loader2, MapPin, Users } from "lucide-react";
 
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,10 +9,9 @@ import Layout from "@/components/Layout";
 import { stories } from "@/data/demo";
 import { getImpactMessage, useCharity } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import DonationReceipt from "@/components/DonationReceipt";
 import QuickDonate from "@/components/QuickDonate";
+import { startStripeCheckout } from "@/lib/payments";
 
 const CharityDetail = () => {
   const { id } = useParams();
@@ -22,13 +20,6 @@ const CharityDetail = () => {
   const { toast } = useToast();
   const [selectedAmount, setSelectedAmount] = useState(25);
   const [donating, setDonating] = useState(false);
-  const [receiptData, setReceiptData] = useState<{
-    donorName: string;
-    charityName: string;
-    amount: number;
-    date: Date;
-    transactionId: string;
-  } | null>(null);
 
   if (loading) {
     return (
@@ -64,30 +55,17 @@ const CharityDetail = () => {
 
     setDonating(true);
     try {
-      const transactionId = crypto.randomUUID();
-      const { error } = await supabase.from("donations").insert({
-        user_id: user.id,
-        charity_id: charity.id,
-        charity_name: charity.name,
-        amount: selectedAmount,
-        status: "pending",
-        payment_method: "demo_detail",
-      });
-      if (error) throw error;
-
-      setReceiptData({
-        donorName: user.user_metadata?.full_name || user.email || "Donor",
+      await startStripeCheckout({
+        charityId: charity.id,
         charityName: charity.name,
         amount: selectedAmount,
-        date: new Date(),
-        transactionId,
       });
       toast({
-        title: "Demo donation saved",
-        description: `Recorded as a pending pledge until a verified payment flow is connected. ${getImpactMessage(selectedAmount)}`,
+        title: "Redirecting to secure checkout",
+        description: getImpactMessage(selectedAmount),
       });
     } catch {
-      toast({ title: "Donation failed", description: "Something went wrong.", variant: "destructive" });
+      toast({ title: "Checkout failed", description: "We could not start Stripe Checkout.", variant: "destructive" });
     } finally {
       setDonating(false);
     }
@@ -182,27 +160,8 @@ const CharityDetail = () => {
                   ))}
                 </div>
 
-                <div className="mt-5">
-                  <p className="mb-2 text-sm font-medium">Payment Method</p>
-                  <RadioGroup defaultValue="card" className="grid grid-cols-2 gap-2">
-                    {[
-                      { value: "card", label: "Card", desc: "Visa / Mastercard" },
-                      { value: "paypal", label: "PayPal", desc: "Pay with PayPal" },
-                      { value: "bank", label: "Bank", desc: "Bank Transfer" },
-                      { value: "apple", label: "Apple Pay", desc: "Quick checkout" },
-                    ].map((method) => (
-                      <label
-                        key={method.value}
-                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-input p-2.5 transition-colors hover:bg-accent has-[data-state=checked]:border-primary has-[data-state=checked]:bg-primary/5"
-                      >
-                        <RadioGroupItem value={method.value} className="sr-only" />
-                        <div>
-                          <p className="text-sm font-medium leading-none">{method.label}</p>
-                          <p className="text-[11px] text-muted-foreground">{method.desc}</p>
-                        </div>
-                      </label>
-                    ))}
-                  </RadioGroup>
+                <div className="mt-5 rounded-lg border bg-accent/20 p-3 text-sm text-muted-foreground">
+                  Payment is handled in Stripe Checkout. Supported methods depend on your Stripe account and country configuration.
                 </div>
 
                 {!user && (
@@ -216,17 +175,16 @@ const CharityDetail = () => {
 
                 <Button className="mt-4 w-full gap-2" size="lg" onClick={handleDonate} disabled={donating}>
                   {donating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className="h-4 w-4" />}
-                  {donating ? "Processing..." : "Save Demo Pledge"}
+                  {donating ? "Processing..." : "Donate Securely"}
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">
-                  Pending until a verified payment flow is connected.
+                  Secure checkout powered by Stripe. Your donation is only marked complete after server-side verification.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-      {receiptData && <DonationReceipt receipt={receiptData} onClose={() => setReceiptData(null)} />}
     </Layout>
   );
 };

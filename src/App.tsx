@@ -23,6 +23,7 @@ import BlockchainTracker from "./pages/BlockchainTracker";
 import Feedback from "./pages/Feedback";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import CheckoutResult from "./pages/CheckoutResult";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/blockchain" element={<BlockchainTracker />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/checkout-result" element={<CheckoutResult />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Chatbot />

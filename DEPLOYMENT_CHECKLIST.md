@@ -31,22 +31,37 @@
   - `SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `LOVABLE_API_KEY`
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+  - `PUBLIC_SITE_URL`
 
 ## 5. Supabase migration
 
 - Apply:
   - [supabase/migrations/20260413173000_harden_profiles_and_demo_donations.sql](./supabase/migrations/20260413173000_harden_profiles_and_demo_donations.sql)
+  - [supabase/migrations/20260413191500_add_stripe_checkout_fields.sql](./supabase/migrations/20260413191500_add_stripe_checkout_fields.sql)
 
 ## 6. Redeploy edge functions
 
 - Redeploy:
+  - `create-checkout-session`
+  - `stripe-webhook`
   - `ai-recommend`
   - `ai-chat`
   - `ai-impact-summary`
   - `ai-charity-matcher`
   - `public-api`
 
-## 7. Supabase Auth URLs
+## 7. Stripe webhook
+
+- In Stripe, create a webhook endpoint:
+  - `https://xblwzkguacthayypbqfe.supabase.co/functions/v1/stripe-webhook`
+- Subscribe it to:
+  - `checkout.session.completed`
+  - `checkout.session.expired`
+- Store the returned signing secret as `STRIPE_WEBHOOK_SECRET` in Supabase.
+
+## 8. Supabase Auth URLs
 
 - Set Site URL to your Cloudflare Pages or custom domain.
 - Add Redirect URLs for:
@@ -54,11 +69,12 @@
   - `/reset-password`
 - If Google OAuth is enabled, add the same URLs there too.
 
-## 8. Smoke test after deploy
+## 9. Smoke test after deploy
 
 - Sign up and sign in.
 - Reset password.
 - Confirm `/admin` is hidden for non-admin users.
 - Confirm AI recommendations only work when signed in.
-- Confirm donations are stored as `pending`, not `completed`.
-- Confirm public stats exclude pending demo pledges.
+- Start a Stripe checkout session and confirm a pending donation row is created.
+- Complete a Stripe payment and confirm the webhook changes the donation to `completed`.
+- Confirm public stats exclude pending or failed donations.

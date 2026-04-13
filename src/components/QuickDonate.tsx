@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { getImpactMessage } from "@/hooks/use-charities";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { startStripeCheckout } from "@/lib/payments";
 
 interface QuickDonateProps {
   charityId: string;
@@ -32,25 +32,15 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
 
     setDonatingAmount(amount);
     try {
-      const { error } = await supabase.from("donations").insert({
-        user_id: user.id,
-        charity_id: charityId,
-        charity_name: charityName,
+      await startStripeCheckout({
+        charityId,
+        charityName,
         amount,
-        status: "pending",
-        payment_method: `demo_${type}`,
       });
-      if (error) throw error;
-
       const msg = getImpactMessage(amount);
       setImpactMsg(msg);
-      toast({
-        title: "Demo donation saved",
-        description: `Recorded as a pending pledge until a verified payment flow is connected. ${msg}`,
-      });
-      setTimeout(() => setImpactMsg(null), 5000);
     } catch {
-      toast({ title: "Donation failed", description: "Something went wrong.", variant: "destructive" });
+      toast({ title: "Checkout failed", description: "We could not start Stripe Checkout.", variant: "destructive" });
     } finally {
       setDonatingAmount(null);
     }
@@ -59,7 +49,7 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
   const handleStudentDonate = () => {
     const val = parseFloat(studentAmount);
     if (isNaN(val) || val < 0.5 || val > 10) {
-      toast({ title: "Invalid amount", description: "Please enter between GBP0.50 and GBP10.", variant: "destructive" });
+      toast({ title: "Invalid amount", description: "Please enter between $0.50 and $10.", variant: "destructive" });
       return;
     }
     handleQuickDonate(val, "student");
@@ -89,7 +79,7 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
               handleQuickDonate(amount, "micro");
             }}
           >
-            {donatingAmount === amount ? <Loader2 className="h-3 w-3 animate-spin" /> : `GBP ${amount}`}
+            {donatingAmount === amount ? <Loader2 className="h-3 w-3 animate-spin" /> : `$${amount}`}
           </Button>
         ))}
       </div>
@@ -115,7 +105,7 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
                 min={0.5}
                 max={10}
                 step={0.5}
-                placeholder="GBP0.50 - GBP10"
+                placeholder="$0.50 - $10"
                 value={studentAmount}
                 onChange={(e) => setStudentAmount(e.target.value)}
                 className="h-8 flex-1 text-xs"
@@ -130,7 +120,7 @@ export default function QuickDonate({ charityId, charityName, compact = false }:
 
       {impactMsg && (
         <p className="animate-in fade-in slide-in-from-bottom-1 text-xs font-medium text-primary duration-300">
-          Pending pledge: {impactMsg}
+          Redirecting to secure checkout. {impactMsg}
         </p>
       )}
     </div>

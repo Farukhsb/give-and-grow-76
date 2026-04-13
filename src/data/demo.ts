@@ -132,7 +132,7 @@ export const testimonials = [
   {
     name: "Sarah Johnson",
     role: "Monthly Donor",
-    quote: "CharityApp made it incredibly easy to find causes I care about and set up recurring donations. I can see exactly where my money goes.",
+    quote: "CharityApp made it incredibly easy to find causes I care about and donate securely. I can see exactly where my money goes.",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
   },
   {
@@ -183,7 +183,7 @@ export const faqs = [
   },
   {
     question: "Are my donations tax-deductible?",
-    answer: "Not in the current demo flow. The app stores pending pledges, not verified payments, so official tax receipts should only be issued after a real payment processor is connected.",
+    answer: "Tax treatment depends on the charity, jurisdiction, and the final receipt process used in production. Only verified completed payments should ever be used to generate donation receipts or tax documentation.",
   },
   {
     question: "How do you verify charities?",
@@ -191,11 +191,11 @@ export const faqs = [
   },
   {
     question: "Can I set up recurring donations?",
-    answer: "Absolutely! You can set up monthly, quarterly, or annual recurring donations to any charity on our platform. You can modify or cancel your recurring donations at any time from your dashboard.",
+    answer: "Not yet. The current production payment flow supports one-time donations through Stripe Checkout. Recurring billing should only be added after subscription handling and customer portal support are implemented server-side.",
   },
   {
     question: "What percentage of my donation goes to the charity?",
-    answer: "We're proud to say that 95% of every donation goes directly to the charity. The remaining 5% covers payment processing fees and platform maintenance to keep CharityApp running.",
+    answer: "Processing and platform fees depend on the configured payment provider and operating costs. Final donation allocation should be disclosed using the live payment setup and finance policy for the deployed platform.",
   },
   {
     question: "How can my organization join CharityApp?",

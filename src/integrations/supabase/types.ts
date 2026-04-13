@@ -43,10 +43,15 @@ export type Database = {
           amount: number
           charity_id: string
           charity_name: string
+          completed_at: string | null
           created_at: string
+          currency: string
           id: string
           payment_method: string | null
+          payment_provider: string | null
           receipt_url: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           status: string
           user_id: string | null
         }
@@ -54,10 +59,15 @@ export type Database = {
           amount: number
           charity_id: string
           charity_name: string
+          completed_at?: string | null
           created_at?: string
+          currency?: string
           id?: string
           payment_method?: string | null
+          payment_provider?: string | null
           receipt_url?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           status?: string
           user_id?: string | null
         }
@@ -65,10 +75,15 @@ export type Database = {
           amount?: number
           charity_id?: string
           charity_name?: string
+          completed_at?: string | null
           created_at?: string
+          currency?: string
           id?: string
           payment_method?: string | null
+          payment_provider?: string | null
           receipt_url?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           status?: string
           user_id?: string | null
         }

@@ -14,6 +14,9 @@ These are public frontend values and belong in Pages project environment variabl
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `LOVABLE_API_KEY`
+ - `STRIPE_SECRET_KEY`
+ - `STRIPE_WEBHOOK_SECRET`
+ - `PUBLIC_SITE_URL`
 
 These must remain server-side only.
 
@@ -34,5 +37,5 @@ Make sure these match the production domain exactly:
 ## Before launch
 
 - Remove any demo/test content you do not want visible publicly.
-- Keep demo pledges out of revenue reporting until a real payment processor is live.
 - Verify only real admins have rows in `public.user_roles`.
+- Verify the Stripe webhook is pointing to `/functions/v1/stripe-webhook` on the correct Supabase project.

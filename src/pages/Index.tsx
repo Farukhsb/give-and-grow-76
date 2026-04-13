@@ -118,7 +118,7 @@ const Index = () => {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mt-12 grid gap-8 md:grid-cols-3">
             {[
               { icon: <Globe className="h-8 w-8 text-primary" />, title: "Discover", desc: "Browse verified charities and causes that align with your values." },
-              { icon: <Heart className="h-8 w-8 text-secondary" />, title: "Donate", desc: "Give securely with one-time or recurring donations — 95% goes directly to the cause." },
+              { icon: <Heart className="h-8 w-8 text-secondary" />, title: "Donate", desc: "Give securely through Stripe Checkout with server-side payment verification." },
               { icon: <Users className="h-8 w-8 text-primary" />, title: "Track Impact", desc: "See exactly how your donation is making a real difference in people's lives." },
             ].map((step, i) => (
               <motion.div key={i} variants={fadeUp}>
