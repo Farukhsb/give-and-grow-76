@@ -17,6 +17,7 @@ import Terms from "./pages/Terms";
 import DonationPolicy from "./pages/DonationPolicy";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import DonorProfile from "./pages/DonorProfile";
 import AdminDashboard from "./pages/AdminDashboard";
 import Leaderboard from "./pages/Leaderboard";
 import BlockchainTracker from "./pages/BlockchainTracker";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/donation-policy" element={<DonationPolicy />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<DonorProfile />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/blockchain" element={<BlockchainTracker />} />
