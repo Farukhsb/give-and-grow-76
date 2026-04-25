@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Heart, Award, Clock, LogOut, Edit, User,
+  Heart, Clock, LogOut, Edit,
   DollarSign, HandHeart, Trophy, ChevronRight, Users, Plus, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/Layout";
 import ImpactSummary from "@/components/ImpactSummary";
+import ImpactTimeline from "@/components/donor/ImpactTimeline";
 import CharityMatcher from "@/components/CharityMatcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -232,6 +233,8 @@ const Dashboard = () => {
         </div>
 
         <ImpactSummary donations={completedDonations} displayName={profile?.display_name || "Friend"} />
+
+        <ImpactTimeline donations={donations} />
 
         <Tabs defaultValue="donations" className="space-y-4">
           <TabsList>
