@@ -10,6 +10,34 @@ interface RecommendedCampaignsProps {
   onOpenMatcher: () => void;
 }
 
+const getWhyLabel = (factor: string) => {
+  const labels: Record<string, string> = {
+    "cause alignment": "Matches your cause",
+    "location preference": "Fits your location preference",
+    "campaign urgency": "Urgent campaign",
+    "close to target": "Close to funding target",
+    "visible funding progress": "Progress is visible",
+    "existing donor activity": "Other donors are active",
+    "general relevance": "Generally relevant",
+  };
+
+  return labels[factor] ?? factor;
+};
+
+const getWhyDescription = (factor: string) => {
+  const descriptions: Record<string, string> = {
+    "cause alignment": "The campaign category or description aligns with the cause area selected in the matcher.",
+    "location preference": "The campaign location appears to fit the location preference selected by the donor.",
+    "campaign urgency": "The campaign has an urgency signal that increases its recommendation priority.",
+    "close to target": "The campaign is already close to its target, so an additional donation may help close the remaining funding gap.",
+    "visible funding progress": "The campaign has a visible target and progress value, making its funding status easier to understand.",
+    "existing donor activity": "The campaign already has donor activity, which suggests existing supporter engagement.",
+    "general relevance": "The campaign is being shown because it has available campaign data, even without a strong personalised signal yet.",
+  };
+
+  return descriptions[factor] ?? "This factor contributed to the recommendation score.";
+};
+
 export default function RecommendedCampaigns({ recommendations, onOpenMatcher }: RecommendedCampaignsProps) {
   return (
     <Card>
@@ -55,20 +83,35 @@ export default function RecommendedCampaigns({ recommendations, onOpenMatcher }:
                   </div>
                 </div>
 
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{recommendation.reason}</p>
-
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {recommendation.matchFactors.slice(0, 3).map((factor) => (
-                    <Badge key={factor} variant="outline" className="text-xs">
-                      {factor}
-                    </Badge>
-                  ))}
+                <div className="mt-3 rounded-md bg-muted/50 p-3">
+                  <p className="text-xs font-medium text-foreground">Why this was recommended</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {recommendation.matchFactors.slice(0, 4).map((factor) => (
+                      <Badge
+                        key={factor}
+                        variant="outline"
+                        className="cursor-help text-xs"
+                        title={getWhyDescription(factor)}
+                      >
+                        {getWhyLabel(factor)}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
 
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{recommendation.reason}</p>
+
                 {recommendation.transparencySignals.length > 0 && (
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Transparency: {recommendation.transparencySignals.slice(0, 2).join(", ")}
-                  </p>
+                  <div className="mt-3 rounded-md border border-dashed p-2">
+                    <p className="text-xs font-medium text-foreground">Transparency signals</p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {recommendation.transparencySignals.slice(0, 3).map((signal) => (
+                        <Badge key={signal} variant="secondary" className="text-xs">
+                          {signal}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 <Button asChild size="sm" className="mt-4 w-full">
