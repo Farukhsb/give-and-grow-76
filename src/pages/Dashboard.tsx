@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Heart, Award, Clock, TrendingUp, LogOut, Edit, User,
-  DollarSign, HandHeart, Trophy, ChevronRight, Users, Plus
+  Heart, Award, Clock, LogOut, Edit, User,
+  DollarSign, HandHeart, Trophy, ChevronRight, Users, Plus, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +29,9 @@ interface DonationRow {
   id: string;
   charity_name: string;
   amount: number;
+  currency: string;
   status: string;
+  receipt_url: string | null;
   created_at: string;
 }
 
@@ -41,6 +43,18 @@ interface VolunteerRow {
   created_at: string;
 }
 
+const formatCurrency = (amount: number, currency = "gbp") =>
+  new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount);
+
+const getStatusVariant = (status: string) => {
+  if (status === "completed") return "default";
+  if (status === "pending") return "secondary";
+  return "outline";
+};
+
 const Dashboard = () => {
   const { user, profile, isAdmin, loading, signOut, updateProfile } = useAuth();
   const { toast } = useToast();
@@ -50,27 +64,38 @@ const Dashboard = () => {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editBio, setEditBio] = useState("");
-  const [totalDonated, setTotalDonated] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
   const [showMatcher, setShowMatcher] = useState(false);
-  const completedDonations = donations.filter((donation) => donation.status === "completed");
+  const [donationError, setDonationError] = useState<string | null>(null);
+
+  const completedDonations = useMemo(
+    () => donations.filter((donation) => donation.status === "completed"),
+    [donations]
+  );
+
+  const totalDonated = useMemo(
+    () => completedDonations.reduce((sum, donation) => sum + Number(donation.amount), 0),
+    [completedDonations]
+  );
 
   useEffect(() => {
     if (!user) return;
+
+    setDonationError(null);
+
     supabase
       .from("donations")
-      .select("*")
+      .select("id, charity_name, amount, currency, status, receipt_url, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (data) {
-          setDonations(data as DonationRow[]);
-          setTotalDonated(
-            data
-              .filter((donation) => donation.status === "completed")
-              .reduce((sum, donation) => sum + Number(donation.amount), 0)
-          );
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Could not load donor donations", error);
+          setDonationError("We could not load your donation history. Please refresh or try again shortly.");
+          return;
         }
+
+        setDonations((data ?? []) as DonationRow[]);
       });
 
     supabase
@@ -115,7 +140,6 @@ const Dashboard = () => {
       status: "active",
       hours_logged: 0,
     });
-    // Refresh
     const { data } = await supabase.from("volunteer_assignments").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     if (data) {
       setVolunteers(data as VolunteerRow[]);
@@ -137,8 +161,8 @@ const Dashboard = () => {
   };
 
   const statCards = [
-    { icon: DollarSign, label: "Total Donated", value: `$${totalDonated.toFixed(2)}`, color: "text-primary" },
-    { icon: Heart, label: "Verified Donations", value: completedDonations.length.toString(), color: "text-secondary" },
+    { icon: DollarSign, label: "Total Donated", value: formatCurrency(totalDonated, completedDonations[0]?.currency ?? "gbp"), color: "text-primary" },
+    { icon: CheckCircle2, label: "Completed Donations", value: completedDonations.length.toString(), color: "text-secondary" },
     { icon: Clock, label: "Volunteer Hours", value: totalHours.toString(), color: "text-primary" },
     { icon: Trophy, label: "Points Earned", value: (profile?.points ?? 0).toString(), color: "text-secondary" },
   ];
@@ -151,7 +175,7 @@ const Dashboard = () => {
             <h1 className="font-serif text-3xl font-bold text-foreground">
               Welcome, {profile?.display_name || "Friend"}!
             </h1>
-            <p className="text-muted-foreground">Your giving journey at a glance</p>
+            <p className="text-muted-foreground">Your giving journey, verified donations, and next opportunities in one place.</p>
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => setShowMatcher(true)}>
@@ -220,11 +244,15 @@ const Dashboard = () => {
             <Card>
               <CardHeader><CardTitle className="text-lg">Recent Donations</CardTitle></CardHeader>
               <CardContent>
-                {donations.length === 0 ? (
+                {donationError ? (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                    {donationError}
+                  </div>
+                ) : donations.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <HandHeart className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No donations yet.</p>
-                    <p className="mt-2 text-sm">Demo pledges stay pending until a verified payment flow is connected.</p>
+                    <p>You have not made a verified donation yet.</p>
+                    <p className="mt-2 text-sm">Explore campaigns to start your giving journey.</p>
                     <Button asChild className="mt-4" variant="outline">
                       <Link to="/charities">Browse Charities <ChevronRight className="h-4 w-4 ml-1" /></Link>
                     </Button>
@@ -232,14 +260,24 @@ const Dashboard = () => {
                 ) : (
                   <div className="space-y-3">
                     {donations.map((d) => (
-                      <div key={d.id} className="flex items-center justify-between rounded-lg border p-4">
+                      <div key={d.id} className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="font-medium">{d.charity_name}</p>
                           <p className="text-sm text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</p>
+                          {d.status === "pending" && (
+                            <p className="mt-1 text-xs text-muted-foreground">Pending donations are not counted until Stripe confirms payment.</p>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-primary">${Number(d.amount).toFixed(2)}</p>
-                          <Badge variant={d.status === "completed" ? "default" : "secondary"}>{d.status}</Badge>
+                        <div className="text-left sm:text-right">
+                          <p className="font-bold text-primary">{formatCurrency(Number(d.amount), d.currency)}</p>
+                          <div className="mt-1 flex items-center gap-2 sm:justify-end">
+                            <Badge variant={getStatusVariant(d.status)}>{d.status}</Badge>
+                            {d.receipt_url && d.status === "completed" && (
+                              <a className="text-xs text-primary underline" href={d.receipt_url} target="_blank" rel="noreferrer">
+                                Receipt
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
