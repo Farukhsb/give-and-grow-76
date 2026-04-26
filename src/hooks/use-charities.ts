@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   collection,
+  doc,
   onSnapshot,
   QueryDocumentSnapshot,
 } from "firebase/firestore";
@@ -21,10 +22,10 @@ export interface Charity {
   featured: boolean;
 }
 
-function mapDoc(doc: QueryDocumentSnapshot): Charity {
-  const d = doc.data();
+function mapDoc(docSnapshot: QueryDocumentSnapshot): Charity {
+  const d = docSnapshot.data();
   return {
-    id: doc.id,
+    id: docSnapshot.id,
     name: d.name ?? d.Name ?? "",
     description: d.description ?? d.Description ?? "",
     longDescription: d.longDescription ?? d.LongDescription ?? "",
